@@ -1,4 +1,5 @@
-const TIMEOUT_MS = 10_000
+// 60 s: el plan gratuito de Render duerme el servidor y la primera petición puede tardar cerca de un minuto.
+const TIMEOUT_MS = 60_000
 
 /** Error con mensaje comprensible para mostrar al usuario. */
 export class ApiError extends Error {
@@ -38,7 +39,7 @@ function construirUrl(ruta: string): string {
 
 /**
  * Hace una petición GET a la API y devuelve el JSON.
- * - Timeout de 10 s.
+ * - Timeout de 60 s.
  * - Si se pasa `signal` y se aborta (p. ej. al desmontar), se relanza el AbortError
  *   para que quien llama pueda ignorarlo.
  */
@@ -68,27 +69,28 @@ export async function getJson(ruta: string, signal?: AbortSignal): Promise<unkno
     } catch (err) {
       if (porTimeout) {
         throw new ApiError(
-          'La API tardó demasiado en responder (más de 10 segundos).',
+          'El servidor tardó demasiado en responder. Puede estar despertando: inténtalo de nuevo en un momento.',
         )
       }
       if (signal?.aborted) throw err
       throw new ApiError(
-        'No se pudo conectar con la API. Revisa tu conexión o inténtalo más tarde.',
+        'No hay conexión con el servidor. Revisa tu conexión a internet e inténtalo de nuevo.',
       )
     }
 
     if (!respuesta.ok) {
-      throw new ApiError(
-        `La API respondió con un error (código ${respuesta.status}).`,
-        respuesta.status,
-      )
+      const mensaje =
+        respuesta.status >= 500
+          ? 'El servidor tuvo un problema al responder. Inténtalo de nuevo en unos minutos.'
+          : 'El servidor no pudo entregar la información solicitada.'
+      throw new ApiError(mensaje, respuesta.status)
     }
 
     try {
       return await respuesta.json()
     } catch (err) {
       if (signal?.aborted) throw err
-      throw new ApiError('La respuesta de la API no es un JSON válido.')
+      throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
     }
   } finally {
     clearTimeout(timer)

@@ -1,17 +1,23 @@
-// PENDIENTE: confirmar ruta y forma del JSON con BE
+// Contrato del endpoint de la base técnica (confirmado contra la API publicada).
+// Ejemplo de respuesta: { "data": { "message": "Hola desde Firestore" } }
 
 /** Ruta del endpoint que devuelve el dato de la base técnica (leído de Firestore por la API). */
-export const RUTA_BASE_TECNICA = '/api/base-tecnica'
+export const RUTA_BASE_TECNICA = '/api/v1/base'
 
-/** Forma de la respuesta del endpoint. */
+/** Dato limpio que recibe la interfaz. */
 export interface BaseTecnica {
-  mensaje: string
-  actualizadoEn: string
+  message: string
+}
+
+/** Respuesta tal como la envía la API: el dato viene envuelto en `data`. */
+export interface RespuestaBaseTecnica {
+  data: BaseTecnica
 }
 
 /** Comprueba en tiempo de ejecución que la respuesta tiene la forma esperada. */
-export function esBaseTecnica(valor: unknown): valor is BaseTecnica {
+export function esRespuestaBaseTecnica(valor: unknown): valor is RespuestaBaseTecnica {
   if (typeof valor !== 'object' || valor === null) return false
-  const v = valor as Record<string, unknown>
-  return typeof v.mensaje === 'string' && typeof v.actualizadoEn === 'string'
+  const data = (valor as Record<string, unknown>).data
+  if (typeof data !== 'object' || data === null) return false
+  return typeof (data as Record<string, unknown>).message === 'string'
 }

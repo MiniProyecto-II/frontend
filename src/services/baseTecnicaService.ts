@@ -1,19 +1,11 @@
 import { ApiError, getJson } from './api'
-import { RUTA_BASE_TECNICA, esBaseTecnica, type BaseTecnica } from './contrato'
+import { RUTA_BASE_TECNICA, esRespuestaBaseTecnica, type BaseTecnica } from './contrato'
 
-// El mock solo existe en desarrollo (`npm run dev`) y solo si VITE_USE_MOCK=true.
-// En el build de producción `import.meta.env.DEV` es false y el mock ni siquiera se incluye.
-const usarMock = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === 'true'
-
+/** Pide el dato de la base técnica a la API y lo devuelve ya desenvuelto de `data`. */
 export async function obtenerBaseTecnica(signal?: AbortSignal): Promise<BaseTecnica> {
-  if (usarMock) {
-    const { obtenerBaseTecnicaMock } = await import('./mock')
-    return obtenerBaseTecnicaMock(signal)
+  const respuesta = await getJson(RUTA_BASE_TECNICA, signal)
+  if (!esRespuestaBaseTecnica(respuesta)) {
+    throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
   }
-
-  const datos = await getJson(RUTA_BASE_TECNICA, signal)
-  if (!esBaseTecnica(datos)) {
-    throw new ApiError('La respuesta de la API no tiene el formato esperado.')
-  }
-  return datos
+  return respuesta.data
 }

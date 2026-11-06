@@ -1,9 +1,21 @@
+import { useEffect, useState } from 'react'
 import TarjetaEstado from './TarjetaEstado'
 
-/** Placeholder con la forma del contenido final (etiqueta, valor y fecha). */
+/** Tras este tiempo se avisa de que el servidor gratuito puede estar despertando. */
+const AVISO_LENTO_MS = 5000
+
+/** Placeholder con la forma del contenido final (etiqueta y valor). */
 function EstadoCargando() {
+  const [lento, setLento] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLento(true), AVISO_LENTO_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
-    <TarjetaEstado role="status" aria-live="polite" aria-busy="true">
+    // Sin aria-busy: haría que los lectores de pantalla callen el aviso de carga lenta.
+    <TarjetaEstado role="status" aria-live="polite">
       <div className="flex items-start gap-3">
         <svg
           aria-hidden="true"
@@ -21,11 +33,14 @@ function EstadoCargando() {
         <h2 className="min-w-0 text-lg font-semibold text-texto">Cargando…</h2>
       </div>
       <p className="text-texto-suave">Estamos consultando la información.</p>
+      {/* Se añade dentro del mismo role="status": se anuncia solo esta línea nueva. */}
+      {lento && (
+        <p className="text-sm text-texto-suave">El servidor puede tardar hasta un minuto en despertar.</p>
+      )}
 
       <div aria-hidden="true" className="mt-auto flex animate-pulse flex-col gap-3 motion-reduce:animate-none">
         <div className="h-3 w-24 rounded bg-borde" />
         <div className="h-6 w-4/5 rounded bg-borde" />
-        <div className="h-3 w-40 rounded bg-borde" />
       </div>
     </TarjetaEstado>
   )

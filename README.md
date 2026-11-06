@@ -40,10 +40,9 @@ Copia el archivo de ejemplo y completa los valores:
 cp .env.example .env
 ```
 
-| Variable        | Descripción                                              | Obligatoria | Ejemplo                 |
-| --------------- | -------------------------------------------------------- | ----------- | ----------------------- |
-| `VITE_API_URL`  | URL base de la API del backend (sin barra final)         | Sí          | `http://localhost:8000` |
-| `VITE_USE_MOCK` | `true` usa un dato de ejemplo en vez de la API (solo en `npm run dev`) | No (por defecto `false`) | `false` |
+| Variable       | Descripción                                      | Obligatoria | Ejemplo                 |
+| -------------- | ------------------------------------------------ | ----------- | ----------------------- |
+| `VITE_API_URL` | URL base de la API del backend (sin barra final) | Sí          | `http://localhost:8000` |
 
 > Las variables `VITE_*` se incrustan en el bundle **en tiempo de build**: son públicas en el navegador. No pongas secretos en ellas.
 
@@ -92,19 +91,25 @@ Objetivo: WCAG 2.2 AA. Incluye:
 
 El frontend **nunca** accede a Firestore directamente: todos los datos llegan a través de la API (Node.js en Render).
 
-- `src/services/contrato.ts`: ruta del endpoint y tipo de la respuesta. **Contrato provisional**, pendiente de confirmar con BE; cuando se confirme, solo se edita este archivo.
-  - `GET /api/base-tecnica` → `{ "mensaje": string, "actualizadoEn": string }`
-- `src/services/api.ts`: cliente base con `fetch`. Toma la URL de `VITE_API_URL`, aplica un timeout de 10 s, no usa caché (`cache: 'no-store'`) y convierte errores HTTP y de red en mensajes en español.
-- `src/services/baseTecnicaService.ts`: llama al endpoint y valida la forma de la respuesta.
+- `src/services/contrato.ts`: ruta del endpoint y tipo de la respuesta. Si el contrato cambia, solo se edita este archivo.
+  - `GET /api/v1/base` → `{ "data": { "message": string } }`
+- `src/services/api.ts`: cliente base con `fetch`. Toma la URL de `VITE_API_URL`, aplica un timeout de 60 s, no usa caché (`cache: 'no-store'`) y distingue en español: sin conexión, el servidor tardó demasiado y error del servidor.
+- `src/services/baseTecnicaService.ts`: llama al endpoint, valida la forma de la respuesta y devuelve el contenido de `data`.
 - `src/hooks/useBaseTecnica.ts`: expone `{ data, status, error, reintentar }` (`status`: `'cargando' | 'error' | 'exito'`) y cancela la petición al desmontar el componente.
 - `src/components/DatoBaseTecnica.tsx`: muestra el dato en la pantalla principal con 3 estados accesibles (`EstadoCargando`, `EstadoError` con «Reintentar» y `EstadoExito`); los colores son tokens en `src/index.css` (`@theme`).
 
-### Mock (temporal)
+### Conexión con la API
 
-Mientras el backend no esté publicado, puedes trabajar con un dato de ejemplo poniendo `VITE_USE_MOCK=true` en tu `.env` y ejecutando `npm run dev`. El servicio responde tras 800 ms sin llamar a la API.
+- **En local:** crea un archivo `.env` (está en `.gitignore`, no se sube al repositorio) con la URL de la API publicada y reinicia `npm run dev`:
 
-- Solo funciona en desarrollo: en el build de producción (`npm run build`, Docker, Vercel) el mock no se incluye y siempre se llama a la API.
-- Está aislado en `src/services/mock.ts`; cuando BE publique la API se elimina ese archivo, el bloque `usarMock` de `baseTecnicaService.ts` y la variable `VITE_USE_MOCK`.
+  ```bash
+  VITE_API_URL=https://<tu-backend>.onrender.com
+  ```
+
+  Docker Compose lee el mismo `.env` y la pasa como *build arg*.
+- **En Vercel:** *Settings → Environment Variables* → `VITE_API_URL` con la URL de la API (Production y Preview) y vuelve a desplegar: Vite la incrusta en el build.
+- La API solo acepta peticiones de los orígenes configurados en su CORS (el dominio de Vercel y `http://localhost:5173` para desarrollo).
+- **Servidor dormido:** el backend usa el plan gratuito de Render, que se duerme tras ~15 minutos sin uso. La primera petición puede tardar cerca de un minuto: a los 5 s la pantalla de carga avisa «El servidor puede tardar hasta un minuto en despertar.» y, si pasa de 60 s, se muestra el error con «Reintentar».
 
 ## Ejecutar en local (npm)
 
