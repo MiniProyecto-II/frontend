@@ -1,30 +1,45 @@
+import { useLayoutEffect, useRef } from 'react'
 import { useBaseTecnica } from '../hooks/useBaseTecnica'
+import { useVistaSinParpadeo } from '../hooks/useVistaSinParpadeo'
+import EstadoCargando from './EstadoCargando'
+import EstadoError from './EstadoError'
+import EstadoExito from './EstadoExito'
 
-function formatearFecha(iso: string): string {
-  const fecha = new Date(iso)
-  return Number.isNaN(fecha.getTime()) ? iso : fecha.toLocaleString('es')
-}
-
-// Estados 'cargando' y 'error' provisionales: se diseñan en FE-04.
 function DatoBaseTecnica() {
-  const { data, status, error } = useBaseTecnica()
+  const { data, status, error, reintentar } = useBaseTecnica()
+  const vista = useVistaSinParpadeo(status)
 
-  if (status === 'cargando') {
-    return <p className="mt-6 text-slate-500">Cargando…</p>
-  }
+  const contenedorRef = useRef<HTMLDivElement>(null)
+  const recuperarFoco = useRef(false)
 
-  if (status === 'error') {
-    return <p className="mt-6 text-red-600">Error: {error}</p>
+  // Si el botón con foco desaparece al cambiar de estado, el foco queda en este
+  // contenedor (no salta al inicio de la página) y el siguiente Tab sigue aquí.
+  useLayoutEffect(() => {
+    if (!recuperarFoco.current) return
+    const activo = document.activeElement
+    if (!activo || activo === document.body) {
+      contenedorRef.current?.focus({ preventScroll: true })
+    }
+    recuperarFoco.current = vista === 'cargando'
+  }, [vista])
+
+  const alReintentar = () => {
+    recuperarFoco.current = true
+    reintentar()
   }
 
   return (
-    <div className="mt-6 rounded-lg bg-indigo-50 p-4">
-      <p className="text-lg font-medium text-slate-800">{data?.mensaje}</p>
-      {data && (
-        <p className="mt-2 text-sm text-slate-500">
-          Actualizado: {formatearFecha(data.actualizadoEn)}
-        </p>
+    <div ref={contenedorRef} tabIndex={-1} className="mt-8 w-full outline-none">
+      {vista === 'oculto' && <div aria-hidden="true" className="min-h-[19rem]" />}
+      {vista === 'cargando' && <EstadoCargando />}
+      {vista === 'error' && (
+        <EstadoError
+          detalle={error}
+          onReintentar={alReintentar}
+          deshabilitado={status === 'cargando'}
+        />
       )}
+      {vista === 'exito' && data && <EstadoExito dato={data} />}
     </div>
   )
 }
