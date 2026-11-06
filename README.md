@@ -56,7 +56,7 @@ El frontend **nunca** accede a Firestore directamente: todos los datos llegan a 
 - `src/services/api.ts`: cliente base con `fetch`. Toma la URL de `VITE_API_URL`, aplica un timeout de 10 s, no usa caché (`cache: 'no-store'`) y convierte errores HTTP y de red en mensajes en español.
 - `src/services/baseTecnicaService.ts`: llama al endpoint y valida la forma de la respuesta.
 - `src/hooks/useBaseTecnica.ts`: expone `{ data, status, error, reintentar }` (`status`: `'cargando' | 'error' | 'exito'`) y cancela la petición al desmontar el componente.
-- `src/components/DatoBaseTecnica.tsx`: muestra el dato en la pantalla principal.
+- `src/components/DatoBaseTecnica.tsx`: muestra el dato en la pantalla principal con 3 estados accesibles (`EstadoCargando`, `EstadoError` con «Reintentar» y `EstadoExito`); los colores son tokens en `src/index.css` (`@theme`).
 
 ### Mock (temporal)
 
