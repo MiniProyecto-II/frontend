@@ -69,6 +69,25 @@ Definidas en `src/routes/index.tsx` con `react-router-dom` (`createBrowserRouter
 | `/perfil/eliminar`   | Eliminar cuenta             | Privado |
 | `*`                  | Página no encontrada (404)  | Público |
 
+## Accesibilidad base
+
+Objetivo: WCAG 2.2 AA. Incluye:
+
+- **Idioma:** `<html lang="es">`.
+- **Títulos por página:** «Nombre de la pantalla · Salón de Estudio» (`useTituloPagina`).
+- **Regiones:** `<header>`, `<nav aria-label>` (Principal, Salas, Cuenta), `<main id="contenido">` y `<footer>`; un solo `<h1>` por página.
+- **Enlace «Saltar al contenido»:** primer elemento enfocable; aparece arriba a la izquierda al recibir foco y lleva el foco al `<main>` (`SaltarAlContenido`).
+- **Foco visible:** contorno de 2 px en `--color-acento` (contraste ≥ 3:1 sobre todos los fondos); nada fijo lo tapa ni lo recorta.
+- **Foco al navegar:** al cambiar de ruta el foco pasa al `<h1>` de la nueva página y el scroll vuelve arriba (`useFocoAlNavegar`); no ocurre en la primera carga.
+- Controles de mínimo 48 px de alto, página actual con `aria-current="page"` y respeto de `prefers-reduced-motion`.
+
+**Cómo comprobarlo con el teclado**
+
+1. Carga cualquier ruta y pulsa `Tab`: aparece «Saltar al contenido». Pulsa `Enter`: el siguiente `Tab` ya está dentro del contenido (o en el pie si la página no tiene controles).
+2. Sigue con `Tab` / `Shift+Tab`: el orden es enlace de salto → encabezado o barra lateral → contenido → pie, y el contorno se ve siempre.
+3. Activa un enlace con `Enter`: la nueva página carga y el lector de pantalla anuncia su `<h1>`.
+4. En `/base-tecnica` con error, «Reintentar» se activa con `Enter` o `Espacio`.
+
 ## Consumo de la API
 
 El frontend **nunca** accede a Firestore directamente: todos los datos llegan a través de la API (Node.js en Render).

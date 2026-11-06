@@ -21,7 +21,7 @@ function NoEncontrada() {
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
-          <h1 className="min-w-0 text-2xl font-bold text-texto sm:text-3xl">
+          <h1 tabIndex={-1} className="min-w-0 text-2xl font-bold text-texto sm:text-3xl">
             No encontramos esa página
           </h1>
         </div>

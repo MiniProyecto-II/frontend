@@ -1,12 +1,16 @@
 import { Outlet } from 'react-router-dom'
+import SaltarAlContenido from '../components/SaltarAlContenido'
+import { useFocoAlNavegar } from '../hooks/useFocoAlNavegar'
 import Logo from '../components/Logo'
 import NavegacionPrivada from '../components/NavegacionPrivada'
 import PiePagina from '../components/PiePagina'
 
 // PENDIENTE: proteger rutas privadas en el Sprint 1
 function LayoutPrivado() {
+  useFocoAlNavegar()
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
+      <SaltarAlContenido />
       {/* Escritorio: barra lateral. Celular: barra de navegación arriba, sin menú desplegable. */}
       <header className="flex flex-col gap-3 border-b border-borde bg-barra px-4 py-3 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:gap-6 md:overflow-y-auto md:border-r md:border-b-0 md:py-5">
         <Logo />
