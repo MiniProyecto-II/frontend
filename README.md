@@ -47,6 +47,28 @@ cp .env.example .env
 
 > Las variables `VITE_*` se incrustan en el bundle **en tiempo de build**: son públicas en el navegador. No pongas secretos en ellas.
 
+## Rutas
+
+Definidas en `src/routes/index.tsx` con `react-router-dom` (`createBrowserRouter`). Por ahora las pantallas son placeholders y las rutas privadas **no están protegidas** (pendiente del Sprint 1).
+
+| Ruta                 | Pantalla                    | Layout  |
+| -------------------- | --------------------------- | ------- |
+| `/`                  | Inicio                      | Público |
+| `/ingreso`           | Iniciar sesión              | Público |
+| `/registro`          | Crear cuenta                | Público |
+| `/registro/usuario`  | Un último paso              | Público |
+| `/base-tecnica`      | Base técnica (dato de la API) | Público |
+| `/accesibilidad`     | Accesibilidad               | Público |
+| `/salas`             | Mis salas                   | Privado |
+| `/salas/crear`       | Crear una sala              | Privado |
+| `/salas/unirse`      | Unirse a una sala           | Privado |
+| `/salas/:id`         | Sala                        | Privado |
+| `/salas/:id/editar`  | Editar sala                 | Privado |
+| `/perfil`            | Mi perfil                   | Privado |
+| `/perfil/editar`     | Editar perfil               | Privado |
+| `/perfil/eliminar`   | Eliminar cuenta             | Privado |
+| `*`                  | Página no encontrada (404)  | Público |
+
 ## Consumo de la API
 
 El frontend **nunca** accede a Firestore directamente: todos los datos llegan a través de la API (Node.js en Render).
