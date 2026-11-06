@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+/*
+ * Tokens de diseño (Tailwind v4: equivalente a theme.extend.colors).
+ * Valores tomados del prototipo del equipo; cuando UX entregue los códigos
+ * exactos, se cambian solo aquí. Generan clases como bg-fondo, text-texto-suave…
+ */
+@theme {
+  --color-fondo: #1b2030;
+  --color-superficie: #242b3d;
+  --color-borde: #3a455f;
+  --color-texto: #f4f5fa;
+  --color-texto-suave: #b5bed3;
+
+  --color-primario: #6d28d9;
+  --color-primario-hover: #7c3aed;
+  --color-primario-activo: #5b21b6;
+  --color-acento: #c4b5fd;
+
+  --color-exito: #6ee7b7;
+  --color-error: #f2938a;
+  --color-aviso: #f0c674;
+
+  /* Tintes tenues sobre la superficie (nunca bloques saturados) */
+  --color-error-tenue: color-mix(in srgb, var(--color-error) 12%, var(--color-superficie));
+  --color-exito-tenue: color-mix(in srgb, var(--color-exito) 10%, var(--color-superficie));
+
+  --animate-aparecer: aparecer 150ms ease-out;
+
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-fondo text-texto antialiased;
+  }
+}
+
+/* Si el usuario pide menos movimiento: sin animaciones ni transiciones. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
