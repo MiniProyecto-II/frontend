@@ -1,13 +1,6 @@
 import type { BaseTecnica } from '../services/contrato'
 import TarjetaEstado from './TarjetaEstado'
 
-function formatearFecha(iso: string): string {
-  const fecha = new Date(iso)
-  return Number.isNaN(fecha.getTime())
-    ? iso
-    : fecha.toLocaleString('es', { dateStyle: 'long', timeStyle: 'short' })
-}
-
 interface Props {
   dato: BaseTecnica
 }
@@ -34,11 +27,7 @@ function EstadoExito({ dato }: Props) {
         </p>
       </div>
 
-      <p className="text-2xl font-semibold text-texto">{dato.mensaje}</p>
-
-      <p className="mt-auto text-sm text-texto-suave">
-        Actualizado el <time dateTime={dato.actualizadoEn}>{formatearFecha(dato.actualizadoEn)}</time>
-      </p>
+      <p className="text-2xl font-semibold text-texto">{dato.message}</p>
     </TarjetaEstado>
   )
 }
