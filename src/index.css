@@ -56,6 +56,15 @@
     outline: 2px solid var(--color-acento);
     outline-offset: 2px;
   }
+
+  /*
+   * El <h1> solo recibe foco por script al cambiar de ruta (useFocoAlNavegar):
+   * no es un control, así que no se dibuja contorno. Los controles reales conservan el suyo.
+   */
+  h1:focus:not(:focus-visible),
+  h1[tabindex='-1']:focus {
+    outline: none;
+  }
 }
 
 /* Si el usuario pide menos movimiento: sin animaciones ni transiciones. */
