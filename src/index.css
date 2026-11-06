@@ -17,6 +17,11 @@
   --color-primario-activo: #5b21b6;
   --color-acento: #c4b5fd;
 
+  /* Navegación (barra lateral y encabezado del prototipo) */
+  --color-barra: #111522;
+  --color-nav-activo: #30234e;
+  --color-secundario: #2d354b;
+
   --color-exito: #6ee7b7;
   --color-error: #f2938a;
   --color-aviso: #f0c674;
@@ -44,6 +49,12 @@
 
   body {
     @apply bg-fondo text-texto antialiased;
+  }
+
+  /* Foco siempre visible en enlaces y botones (contraste ≥ 3:1 sobre los fondos oscuros) */
+  :focus-visible {
+    outline: 2px solid var(--color-acento);
+    outline-offset: 2px;
   }
 }
 
