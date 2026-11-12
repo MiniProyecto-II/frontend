@@ -1,14 +1,16 @@
 import {
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signOut,
   type User,
 } from 'firebase/auth'
 import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '../services/api'
-import type { Perfil } from '../services/contrato'
+import type { CuerpoRegistro, Perfil } from '../services/contrato'
 import { auth } from '../services/firebase'
 import {
   obtenerMiPerfil,
+  registrarUsuario,
 } from '../services/usuariosService'
 
 /**
@@ -20,9 +22,31 @@ import {
  */
 export type EstadoSesion = 'cargando' | 'anonimo' | 'sin-username' | 'autenticado' | 'error'
 
+/** Por qué falló un ingreso, para que cada pantalla muestre el mensaje adecuado. */
+export type TipoErrorAuth = 'credenciales' | 'cancelado' | 'otro'
+
+export class ErrorAuth extends Error {
+  readonly tipo: TipoErrorAuth
+
+  constructor(mensaje: string, tipo: TipoErrorAuth) {
+    super(mensaje)
+    this.name = 'ErrorAuth'
+    this.tipo = tipo
+  }
+}
+
 export interface DatosAuth {
   nombre: string | null
   correo: string | null
+}
+
+export interface DatosRegistro {
+  nombres: string
+  apellidos: string
+  username: string
+  avatar: string
+  correo: string
+  contrasena: string
 }
 
 export interface AuthValor {
@@ -31,11 +55,45 @@ export interface AuthValor {
   /** Datos de la cuenta de Firebase (útil cuando aún no hay perfil, p. ej. Google sin username). */
   datosAuth: DatosAuth | null
   errorSesion: string | null
+  registrar: (datos: DatosRegistro) => Promise<void>
   reintentarSesion: () => Promise<void>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthValor | null>(null)
+
+const MENSAJE_SIN_FIREBASE =
+  'La aplicación no está configurada para iniciar sesión todavía. Avisa al equipo de desarrollo.'
+
+function traducirErrorFirebase(err: unknown): Error {
+  if (err instanceof ApiError || err instanceof ErrorAuth) return err
+  const codigo = typeof err === 'object' && err !== null ? (err as { code?: unknown }).code : undefined
+  switch (codigo) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-email':
+    case 'auth/missing-password':
+      return new ErrorAuth('Correo o contraseña incorrectos.', 'credenciales')
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+    case 'auth/user-cancelled':
+      return new ErrorAuth('Cerraste el acceso de Google. Puedes volver a intentarlo.', 'cancelado')
+    case 'auth/popup-blocked':
+      return new ErrorAuth(
+        'Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes e inténtalo de nuevo.',
+        'otro',
+      )
+    case 'auth/network-request-failed':
+      return new ErrorAuth('No hay conexión. Revisa tu internet e inténtalo de nuevo.', 'otro')
+    case 'auth/too-many-requests':
+      return new ErrorAuth('Hiciste demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 'otro')
+    case 'auth/user-disabled':
+      return new ErrorAuth('Esta cuenta está deshabilitada. Contacta al equipo del Salón de Estudio.', 'otro')
+    default:
+      return new ErrorAuth('No pudimos iniciar sesión. Inténtalo de nuevo en un momento.', 'otro')
+  }
+}
 
 function datosDe(usuario: User): DatosAuth {
   return { nombre: usuario.displayName, correo: usuario.email }
@@ -49,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Evita que una respuesta lenta pise a una más reciente.
   const secuencia = useRef(0)
+  // Mientras una acción (login, registro, Google) controla el flujo, el listener no sincroniza por su cuenta.
+  const accionEnCurso = useRef(false)
 
   const limpiar = useCallback(() => {
     setPerfil(null)
@@ -97,9 +157,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!auth) return
     return onAuthStateChanged(auth, (usuario) => {
+      if (accionEnCurso.current) return
       sincronizar(usuario).catch(() => undefined)
     })
   }, [sincronizar])
+
+  /** Ejecuta una acción de ingreso; si algo falla después de entrar, no deja una sesión a medias. */
+  const ejecutarIngreso = useCallback(
+    async (accion: () => Promise<User>) => {
+      if (!auth) throw new ErrorAuth(MENSAJE_SIN_FIREBASE, 'otro')
+      accionEnCurso.current = true
+      try {
+        const usuario = await accion()
+        await sincronizar(usuario)
+      } catch (err) {
+        await descartarSesion()
+        throw traducirErrorFirebase(err)
+      } finally {
+        accionEnCurso.current = false
+      }
+    },
+    [descartarSesion, sincronizar],
+  )
+
+  const registrar = useCallback(
+    async (datos: DatosRegistro) => {
+      if (!auth) throw new ErrorAuth(MENSAJE_SIN_FIREBASE, 'otro')
+      const cuerpo: CuerpoRegistro = {
+        firstName: datos.nombres.trim(),
+        lastName: datos.apellidos.trim(),
+        username: datos.username.trim().toLowerCase(),
+        avatar: datos.avatar,
+        email: datos.correo.trim(),
+        password: datos.contrasena,
+      }
+      // 1) La API crea la cuenta y valida unicidad (si falla, el error llega al formulario tal cual).
+      await registrarUsuario(cuerpo)
+      // 2) Con la cuenta creada, se inicia sesión para entrar directo al panel.
+      try {
+        await ejecutarIngreso(async () => {
+          const credencial = await signInWithEmailAndPassword(auth!, cuerpo.email, cuerpo.password)
+          return credencial.user
+        })
+      } catch {
+        throw new ErrorAuth(
+          'Tu cuenta se creó, pero no pudimos iniciar sesión automáticamente. Entra desde «Iniciar sesión».',
+          'otro',
+        )
+      }
+    },
+    [ejecutarIngreso],
+  )
 
   const reintentarSesion = useCallback(async () => {
     setEstado('cargando')
@@ -112,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      registrar,
       reintentarSesion,
     }),
     [
@@ -119,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      registrar,
       reintentarSesion,
     ],
   )

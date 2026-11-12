@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import LayoutAuth from '../layouts/LayoutAuth'
 import LayoutPrivado from '../layouts/LayoutPrivado'
 import LayoutPublico from '../layouts/LayoutPublico'
 import Accesibilidad from '../pages/Accesibilidad'
@@ -16,16 +17,27 @@ import Registro from '../pages/Registro'
 import RegistroUsuario from '../pages/RegistroUsuario'
 import Sala from '../pages/Sala'
 import UnirseSala from '../pages/UnirseSala'
-import { RutaPrivada } from './guardas'
+import { RutaPrivada, RutaSoloInvitados } from './guardas'
 
 export const router = createBrowserRouter([
+  {
+    // Pantallas de acceso: solo para quien no tiene sesión
+    element: <LayoutAuth />,
+    children: [
+      {
+        element: <RutaSoloInvitados />,
+        children: [
+          { path: '/registro', element: <Registro /> },
+        ],
+      },
+    ],
+  },
   {
     // Pantallas públicas
     element: <LayoutPublico />,
     children: [
       { path: '/', element: <Inicio /> },
       { path: '/ingreso', element: <Ingreso /> },
-      { path: '/registro', element: <Registro /> },
       { path: '/registro/usuario', element: <RegistroUsuario /> },
       { path: '/base-tecnica', element: <BaseTecnica /> },
       { path: '/accesibilidad', element: <Accesibilidad /> },

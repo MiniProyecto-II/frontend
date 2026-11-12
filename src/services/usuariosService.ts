@@ -1,9 +1,16 @@
 import { ApiError, peticion } from './api'
 import {
   RUTA_MI_PERFIL,
+  RUTA_REGISTRO,
   esRespuestaPerfil,
+  type CuerpoRegistro,
   type Perfil,
 } from './contrato'
+
+/** Crea la cuenta en el servidor (Firebase Auth + perfil en Firestore, con username único). */
+export async function registrarUsuario(cuerpo: CuerpoRegistro, signal?: AbortSignal): Promise<void> {
+  await peticion(RUTA_REGISTRO, { metodo: 'POST', cuerpo, signal })
+}
 
 /**
  * Perfil de la persona con sesión. Devuelve `null` si todavía no tiene perfil completo

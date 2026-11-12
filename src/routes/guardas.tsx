@@ -44,4 +44,12 @@ export function RutaPrivada() {
   return <Outlet />
 }
 
+/** Ingreso y registro: si ya hay sesión no tienen sentido, se va al panel (o a la ruta que se pidió). */
+export function RutaSoloInvitados() {
+  const { estado } = useAuth()
+  if (estado === 'cargando') return <PantallaComprobando />
+  if (estado === 'autenticado') return <Navigate to="/salas" replace />
+  if (estado === 'sin-username') return <Navigate to="/registro/usuario" replace />
+  return <Outlet />
+}
 
