@@ -53,9 +53,9 @@ Definidas en `src/routes/index.tsx` con `react-router-dom` (`createBrowserRouter
 | Ruta                 | Pantalla                    | Layout  |
 | -------------------- | --------------------------- | ------- |
 | `/`                  | Inicio                      | Público |
-| `/ingreso`           | Iniciar sesión              | Público |
-| `/registro`          | Crear cuenta                | Público |
-| `/registro/usuario`  | Un último paso              | Público |
+| `/ingreso`           | Iniciar sesión              | Acceso  |
+| `/registro`          | Crear cuenta                | Acceso  |
+| `/registro/usuario`  | Un último paso (elegir username, solo Google) | Acceso |
 | `/base-tecnica`      | Base técnica (dato de la API) | Público |
 | `/accesibilidad`     | Accesibilidad               | Público |
 | `/salas`             | Mis salas                   | Privado |
