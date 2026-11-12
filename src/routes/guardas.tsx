@@ -53,3 +53,12 @@ export function RutaSoloInvitados() {
   return <Outlet />
 }
 
+/** «Un último paso» (elegir username): solo para quien entró con Google y aún no lo tiene. */
+export function RutaCompletarPerfil() {
+  const { estado } = useAuth()
+  if (estado === 'cargando') return <PantallaComprobando />
+  if (estado === 'error') return <PantallaErrorSesion />
+  if (estado === 'anonimo') return <Navigate to="/ingreso" replace />
+  if (estado === 'autenticado') return <Navigate to="/salas" replace />
+  return <Outlet />
+}

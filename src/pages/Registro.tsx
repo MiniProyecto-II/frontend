@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Alerta from '../components/Alerta'
 import Boton from '../components/Boton'
 import CampoTexto from '../components/CampoTexto'
 import SelectorAvatar from '../components/SelectorAvatar'
 import TarjetaAuth from '../components/TarjetaAuth'
+import { ErrorAuth } from '../context/AuthContext'
 import { useAuth } from '../hooks/useAuth'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import { ApiError } from '../services/api'
@@ -66,7 +67,8 @@ const CAMPO_DE_API: Record<string, Campo> = {
 }
 
 function Registro() {
-  const { registrar } = useAuth()
+  const { registrar, iniciarConGoogle } = useAuth()
+  const navigate = useNavigate()
 
   const [valores, setValores] = useState<Valores>(VALORES_INICIALES)
   const [errores, setErrores] = useState<Errores>({})
@@ -74,8 +76,9 @@ function Registro() {
   const [correoRegistrado, setCorreoRegistrado] = useState(false)
   const [intentado, setIntentado] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [enviandoGoogle, setEnviandoGoogle] = useState(false)
 
-  const ocupado = enviando
+  const ocupado = enviando || enviandoGoogle
   const conErrores = Object.keys(errores).length > 0 || errorGeneral !== null
 
   useTituloPagina(conErrores ? 'Revisa tus datos' : 'Crear cuenta')
@@ -146,6 +149,22 @@ function Registro() {
         enfocarPrimerError(formulario)
       } else {
         setErrorGeneral(err instanceof Error ? err.message : 'No pudimos crear tu cuenta. Inténtalo de nuevo.')
+      }
+    }
+  }
+
+  const entrarConGoogle = async () => {
+    if (ocupado) return
+    setEnviandoGoogle(true)
+    setErrorGeneral(null)
+    try {
+      await iniciarConGoogle()
+    } catch (err) {
+      setEnviandoGoogle(false)
+      if (err instanceof ErrorAuth && err.tipo === 'cancelado') {
+        navigate('/ingreso', { state: { googleCancelado: true } })
+      } else {
+        setErrorGeneral(err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.')
       }
     }
   }
@@ -229,9 +248,14 @@ function Registro() {
           <Boton type="submit" cargando={enviando}>
             {enviando ? 'Creando tu cuenta…' : conErrores ? 'Corregir datos' : 'Crear cuenta'}
           </Boton>
+          {!conErrores && (
+            <Boton variante="secundario" cargando={enviandoGoogle} onClick={() => void entrarConGoogle()}>
+              {enviandoGoogle ? 'Abriendo Google…' : 'Continuar con Google'}
+            </Boton>
+          )}
         </div>
         <p role="status" className="sr-only">
-          {enviando ? 'Creando tu cuenta…' : ''}
+          {enviando ? 'Creando tu cuenta…' : enviandoGoogle ? 'Abriendo Google…' : ''}
         </p>
       </form>
 

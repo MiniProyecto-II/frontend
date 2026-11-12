@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import LayoutAuth from '../layouts/LayoutAuth'
 import LayoutPrivado from '../layouts/LayoutPrivado'
 import LayoutPublico from '../layouts/LayoutPublico'
@@ -17,7 +17,7 @@ import Registro from '../pages/Registro'
 import RegistroUsuario from '../pages/RegistroUsuario'
 import Sala from '../pages/Sala'
 import UnirseSala from '../pages/UnirseSala'
-import { RutaPrivada, RutaSoloInvitados } from './guardas'
+import { RutaCompletarPerfil, RutaPrivada, RutaSoloInvitados } from './guardas'
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +30,15 @@ export const router = createBrowserRouter([
           { path: '/registro', element: <Registro /> },
         ],
       },
+      {
+        // Entró con Google y falta elegir el username
+        element: <RutaCompletarPerfil />,
+        children: [
+          { path: '/registro/usuario', element: <RegistroUsuario /> },
+          // Nombre alterno que usa el backlog (SCRUM-289)
+          { path: '/completar-perfil', element: <Navigate to="/registro/usuario" replace /> },
+        ],
+      },
     ],
   },
   {
@@ -38,7 +47,6 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <Inicio /> },
       { path: '/ingreso', element: <Ingreso /> },
-      { path: '/registro/usuario', element: <RegistroUsuario /> },
       { path: '/base-tecnica', element: <BaseTecnica /> },
       { path: '/accesibilidad', element: <Accesibilidad /> },
       // Página de apoyo (404)
