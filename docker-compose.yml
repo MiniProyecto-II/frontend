@@ -4,6 +4,11 @@ services:
       context: .
       args:
         VITE_API_URL: ${VITE_API_URL:-}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
+        VITE_DOMINIO_CORREO: ${VITE_DOMINIO_CORREO:-}
     container_name: salon-estudio-frontend
     ports:
       - "5173:80"

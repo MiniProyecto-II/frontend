@@ -16,6 +16,7 @@ import Registro from '../pages/Registro'
 import RegistroUsuario from '../pages/RegistroUsuario'
 import Sala from '../pages/Sala'
 import UnirseSala from '../pages/UnirseSala'
+import { RutaPrivada } from './guardas'
 
 export const router = createBrowserRouter([
   {
@@ -33,18 +34,22 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    // Pantallas privadas
-    // PENDIENTE: proteger rutas privadas en el Sprint 1
-    element: <LayoutPrivado />,
+    // Pantallas privadas: sin sesión se redirige al ingreso
+    element: <RutaPrivada />,
     children: [
-      { path: '/salas', element: <MisSalas /> },
-      { path: '/salas/crear', element: <CrearSala /> },
-      { path: '/salas/unirse', element: <UnirseSala /> },
-      { path: '/salas/:id', element: <Sala /> },
-      { path: '/salas/:id/editar', element: <EditarSala /> },
-      { path: '/perfil', element: <Perfil /> },
-      { path: '/perfil/editar', element: <EditarPerfil /> },
-      { path: '/perfil/eliminar', element: <EliminarCuenta /> },
+      {
+        element: <LayoutPrivado />,
+        children: [
+          { path: '/salas', element: <MisSalas /> },
+          { path: '/salas/crear', element: <CrearSala /> },
+          { path: '/salas/unirse', element: <UnirseSala /> },
+          { path: '/salas/:id', element: <Sala /> },
+          { path: '/salas/:id/editar', element: <EditarSala /> },
+          { path: '/perfil', element: <Perfil /> },
+          { path: '/perfil/editar', element: <EditarPerfil /> },
+          { path: '/perfil/eliminar', element: <EliminarCuenta /> },
+        ],
+      },
     ],
   },
 ])

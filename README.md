@@ -48,7 +48,7 @@ cp .env.example .env
 
 ## Rutas
 
-Definidas en `src/routes/index.tsx` con `react-router-dom` (`createBrowserRouter`). Por ahora las pantallas son placeholders y las rutas privadas **no están protegidas** (pendiente del Sprint 1).
+Definidas en `src/routes/index.tsx` con `react-router-dom` (`createBrowserRouter`). Desde el Sprint 1 las rutas privadas están protegidas (`src/routes/guardas.tsx`).
 
 | Ruta                 | Pantalla                    | Layout  |
 | -------------------- | --------------------------- | ------- |
@@ -154,3 +154,16 @@ docker compose down
 5. Despliega. El archivo `vercel.json` reescribe todas las rutas a `/index.html`, de modo que las rutas del cliente (React Router) funcionan al recargar la página.
 
 Cada push a la rama configurada genera un nuevo despliegue automáticamente.
+
+## Autenticación (Sprint 1: TS-01, US-01, US-02, US-03)
+
+- **Firebase Auth** (correo/contraseña y Google) se usa solo desde `src/services/firebase.ts`. La configuración sale de `VITE_FIREBASE_*` (ver `.env.example`; en Vercel se agregan igual que `VITE_API_URL`).
+- **Estado de sesión:** `src/context/AuthContext.tsx` (`useAuth()`): `cargando | anonimo | sin-username | autenticado | error`.
+- **Interceptor:** `peticion()` en `src/services/api.ts` agrega `Authorization: Bearer <ID Token>` en las peticiones con `autenticada: true`. Si la API responde 401 renueva el token y reintenta una vez.
+- **Guardas** (`src/routes/guardas.tsx`):
+  - `RutaPrivada`: sin sesión → `/ingreso` y, tras entrar, vuelve a la ruta pedida; con Google sin username → `/registro/usuario`.
+  - `RutaSoloInvitados`: `/ingreso` y `/registro` redirigen al panel si ya hay sesión.
+  - `RutaCompletarPerfil`: `/registro/usuario` solo para quien entró con Google sin username.
+- **Contrato con la API:** rutas, campos y códigos de error en `src/services/contrato.ts` (solo se edita ahí).
+- **Reglas de los formularios:** `src/utils/validaciones.ts` (contraseña ≥ 8 con mayúscula, minúscula y número; username 3–20 con letras, números, `.` o `_`).
+- `VITE_DOMINIO_CORREO` (opcional) obliga a que el correo del registro termine en ese dominio.
