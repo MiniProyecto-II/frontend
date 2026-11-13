@@ -1,5 +1,36 @@
 # Salón de Estudio Colaborativo — Frontend
 
+## Desarrollo local conectado al Firebase del equipo
+
+La configuración de este equipo está en `.env.local` (ignorada por Git):
+`VITE_API_URL=https://backend-1-s7a1.onrender.com`, y las cuatro variables
+`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
+`VITE_FIREBASE_APP_ID` de la aplicación web registrada en `proyecto-2-c6d1f`.
+Al cambiar estas variables, reiniciar Vite. En otro PC, copiar la configuración
+web desde Firebase > Configuración del proyecto > Tus apps; no usar la clave
+privada de una cuenta de servicio en el frontend.
+
+```sh
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Ingreso: http://localhost:5173/ingreso. Registro: http://localhost:5173/registro.
+Base técnica: http://localhost:5173/base-tecnica.
+
+El contrato de la API actualmente desplegada es `POST /api/v1/users/profile`
+autenticado con ID token, con `nombres`, `apellidos`, `username` y `avatar`.
+El registro crea la cuenta con Firebase Authentication; la contraseña no se
+envía a Render. Tanto el registro manual como completar Google usan esta ruta.
+`GET /api/v1/users/me` devuelve `nombres/apellidos`, que se normalizan a
+`firstName/lastName` para los componentes de la interfaz. Las antiguas rutas
+`/auth/register` y `/auth/google-complete` no existen en ese despliegue.
+
+Firebase Authentication requiere correo/contraseña y Google habilitados, y
+`localhost` en los dominios autorizados. El backend en Render puede tardar
+en responder al despertar. No hace falta arrancar un backend local mientras
+`VITE_API_URL` apunte a Render.
+
 Frontend de la aplicación web **Salón de Estudio Colaborativo**. Este repositorio contiene la base técnica del proyecto (ticket FE-01, Sprint 0): React + TypeScript + Vite con Tailwind CSS, empaquetado con Docker/nginx y listo para desplegar en Vercel.
 
 ## Stack

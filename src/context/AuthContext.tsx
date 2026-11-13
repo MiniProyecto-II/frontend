@@ -1,5 +1,7 @@
 import {
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -15,6 +17,7 @@ import {
   completarPerfilGoogle,
   obtenerMiPerfil,
   registrarUsuario,
+  comprobarUsername,
 } from '../services/usuariosService'
 
 /**
@@ -79,6 +82,12 @@ function traducirErrorFirebase(err: unknown): Error {
   if (err instanceof ApiError || err instanceof ErrorAuth) return err
   const codigo = typeof err === 'object' && err !== null ? (err as { code?: unknown }).code : undefined
   switch (codigo) {
+    case 'auth/email-already-in-use':
+      return new ApiError('Este correo ya está registrado.', 409, 'EMAIL_TAKEN')
+    case 'auth/operation-not-allowed':
+      return new ErrorAuth('Este método de acceso aún no está habilitado en Firebase.', 'otro')
+    case 'auth/unauthorized-domain':
+      return new ErrorAuth('Este dominio debe autorizarse en Firebase para acceder con Google.', 'otro')
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/user-not-found':
@@ -223,27 +232,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: datos.correo.trim(),
         password: datos.contrasena,
       }
-      // 1) La API crea la cuenta y valida unicidad (si falla, el error llega al formulario tal cual).
-      await registrarUsuario(cuerpo)
-      // 2) Con la cuenta creada, se inicia sesión para entrar directo al panel.
+      // Firebase autentica; solo el perfil viaja a la API. Nunca se envía la contraseña a Render.
+      await comprobarUsername(cuerpo.username)
+      accionEnCurso.current = true
+      setCierreVoluntario(false)
+      let creado: User | null = null
+      let perfilGuardado = false
       try {
-        await ejecutarIngreso(async () => {
-          const credencial = await signInWithEmailAndPassword(auth!, cuerpo.email, cuerpo.password)
-          return credencial.user
-        })
-      } catch {
-        throw new ErrorAuth(
-          'Tu cuenta se creó, pero no pudimos iniciar sesión automáticamente. Entra desde «Iniciar sesión».',
-          'otro',
-        )
+        const credencial = await createUserWithEmailAndPassword(auth, cuerpo.email, cuerpo.password)
+        creado = credencial.user
+        await registrarUsuario(cuerpo)
+        perfilGuardado = true
+        await sincronizar(creado)
+      } catch (err) {
+        if (creado && !perfilGuardado) {
+          try { await deleteUser(creado) }
+          catch {
+            await descartarSesion()
+            throw new ErrorAuth('La cuenta se creó, pero no pudimos guardar el perfil. Inicia sesión para completar el registro.', 'otro')
+          }
+        }
+        await descartarSesion()
+        throw traducirErrorFirebase(err)
+      } finally {
+        accionEnCurso.current = false
       }
     },
-    [ejecutarIngreso],
+    [descartarSesion, sincronizar],
   )
 
   const completarPerfil = useCallback(
     async (username: string) => {
-      await completarPerfilGoogle(username.trim().toLowerCase())
+      const usuario = auth?.currentUser
+      if (!usuario) throw new ErrorAuth('Inicia sesión de nuevo para completar el perfil.', 'otro')
+      const partes = (usuario.displayName ?? '').trim().split(/\s+/)
+      const nombres = partes[0] ?? ''
+      const apellidos = partes.slice(1).join(' ')
+      if (nombres.length < 2 || apellidos.length < 2) {
+        throw new ErrorAuth('Tu cuenta de Google debe incluir nombres y apellidos para completar el registro.', 'otro')
+      }
+      await completarPerfilGoogle({ username: username.trim().toLowerCase(), nombres, apellidos, avatar: usuario.photoURL ?? 'violeta' })
       await sincronizar(auth?.currentUser ?? null)
     },
     [sincronizar],

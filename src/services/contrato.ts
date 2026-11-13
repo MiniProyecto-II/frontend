@@ -28,8 +28,8 @@ export function esRespuestaBaseTecnica(valor: unknown): valor is RespuestaBaseTe
 // Si Backend los cambia, solo se edita esta sección.
 // ---------------------------------------------------------------------------
 
-export const RUTA_REGISTRO = '/api/v1/auth/register'
-export const RUTA_COMPLETAR_GOOGLE = '/api/v1/auth/google-complete'
+export const RUTA_REGISTRO = '/api/v1/users/profile'
+export const RUTA_COMPLETAR_GOOGLE = '/api/v1/users/profile'
 export const RUTA_MI_PERFIL = '/api/v1/users/me'
 
 /** Códigos de error que devuelve la API en `{ error: { code } }`. */
@@ -46,7 +46,7 @@ export interface Perfil {
   avatar: string
 }
 
-/** Cuerpo de POST /auth/register. */
+/** Datos del formulario. Solo Firebase Authentication recibe email/contraseña. */
 export interface CuerpoRegistro {
   firstName: string
   lastName: string
@@ -56,14 +56,26 @@ export interface CuerpoRegistro {
   password: string
 }
 
-/** Cuerpo de POST /auth/google-complete (el token va en la cabecera). */
+/** Perfil para POST /users/profile (el ID token va en la cabecera). */
 export interface CuerpoCompletarGoogle {
   username: string
+  nombres: string
+  apellidos: string
+  avatar: string
 }
 
 export function esRespuestaPerfil(valor: unknown): valor is { data: Perfil } {
   if (typeof valor !== 'object' || valor === null) return false
   const data = (valor as Record<string, unknown>).data
   if (typeof data !== 'object' || data === null) return false
-  return typeof (data as Record<string, unknown>).username === 'string'
+  const perfil = data as Record<string, unknown>
+  return ['uid', 'username', 'email', 'avatar'].every((campo) => typeof perfil[campo] === 'string') &&
+    (typeof perfil.firstName === 'string' || typeof perfil.nombres === 'string') &&
+    (typeof perfil.lastName === 'string' || typeof perfil.apellidos === 'string')
+}
+
+/** El backend desplegado utiliza nombres/apellidos; la interfaz conserva su modelo. */
+export function normalizarPerfil(perfil: Perfil): Perfil {
+  const datos = perfil as Perfil & { nombres?: string; apellidos?: string }
+  return { ...perfil, firstName: datos.firstName ?? datos.nombres ?? '', lastName: datos.lastName ?? datos.apellidos ?? '' }
 }
