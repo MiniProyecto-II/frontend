@@ -1,8 +1,10 @@
 import { ApiError, peticion } from './api'
 import {
+  RUTA_COMPLETAR_GOOGLE,
   RUTA_MI_PERFIL,
   RUTA_REGISTRO,
   esRespuestaPerfil,
+  type CuerpoCompletarGoogle,
   type CuerpoRegistro,
   type Perfil,
 } from './contrato'
@@ -27,4 +29,10 @@ export async function obtenerMiPerfil(signal?: AbortSignal): Promise<Perfil | nu
     if (err instanceof ApiError && (err.status === 403 || err.status === 404)) return null
     throw err
   }
+}
+
+/** Termina el registro con Google guardando el username elegido. */
+export async function completarPerfilGoogle(username: string, signal?: AbortSignal): Promise<void> {
+  const cuerpo: CuerpoCompletarGoogle = { username }
+  await peticion(RUTA_COMPLETAR_GOOGLE, { metodo: 'POST', cuerpo, autenticada: true, signal })
 }

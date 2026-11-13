@@ -1,6 +1,8 @@
 import {
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth'
@@ -9,6 +11,7 @@ import { ApiError } from '../services/api'
 import type { CuerpoRegistro, Perfil } from '../services/contrato'
 import { auth } from '../services/firebase'
 import {
+  completarPerfilGoogle,
   obtenerMiPerfil,
   registrarUsuario,
 } from '../services/usuariosService'
@@ -55,7 +58,10 @@ export interface AuthValor {
   /** Datos de la cuenta de Firebase (útil cuando aún no hay perfil, p. ej. Google sin username). */
   datosAuth: DatosAuth | null
   errorSesion: string | null
+  iniciarConGoogle: () => Promise<void>
   registrar: (datos: DatosRegistro) => Promise<void>
+  completarPerfil: (username: string) => Promise<void>
+  cerrarSesion: () => Promise<void>
   reintentarSesion: () => Promise<void>
 }
 
@@ -180,6 +186,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [descartarSesion, sincronizar],
   )
 
+  const iniciarConGoogle = useCallback(
+    () =>
+      ejecutarIngreso(async () => {
+        const proveedor = new GoogleAuthProvider()
+        proveedor.setCustomParameters({ prompt: 'select_account' })
+        const credencial = await signInWithPopup(auth!, proveedor)
+        return credencial.user
+      }),
+    [ejecutarIngreso],
+  )
+
   const registrar = useCallback(
     async (datos: DatosRegistro) => {
       if (!auth) throw new ErrorAuth(MENSAJE_SIN_FIREBASE, 'otro')
@@ -209,6 +226,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [ejecutarIngreso],
   )
 
+  const completarPerfil = useCallback(
+    async (username: string) => {
+      await completarPerfilGoogle(username.trim().toLowerCase())
+      await sincronizar(auth?.currentUser ?? null)
+    },
+    [sincronizar],
+  )
+
+  const cerrarSesion = useCallback(async () => {
+    await descartarSesion()
+  }, [descartarSesion])
+
   const reintentarSesion = useCallback(async () => {
     setEstado('cargando')
     await sincronizar(auth?.currentUser ?? null).catch(() => undefined)
@@ -220,7 +249,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      iniciarConGoogle,
       registrar,
+      completarPerfil,
+      cerrarSesion,
       reintentarSesion,
     }),
     [
@@ -228,7 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      iniciarConGoogle,
       registrar,
+      completarPerfil,
+      cerrarSesion,
       reintentarSesion,
     ],
   )

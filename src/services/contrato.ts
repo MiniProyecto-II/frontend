@@ -29,6 +29,7 @@ export function esRespuestaBaseTecnica(valor: unknown): valor is RespuestaBaseTe
 // ---------------------------------------------------------------------------
 
 export const RUTA_REGISTRO = '/api/v1/auth/register'
+export const RUTA_COMPLETAR_GOOGLE = '/api/v1/auth/google-complete'
 export const RUTA_MI_PERFIL = '/api/v1/users/me'
 
 /** Códigos de error que devuelve la API en `{ error: { code } }`. */
@@ -53,6 +54,11 @@ export interface CuerpoRegistro {
   avatar: string
   email: string
   password: string
+}
+
+/** Cuerpo de POST /auth/google-complete (el token va en la cabecera). */
+export interface CuerpoCompletarGoogle {
+  username: string
 }
 
 export function esRespuestaPerfil(valor: unknown): valor is { data: Perfil } {
