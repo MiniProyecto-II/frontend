@@ -21,3 +21,43 @@ export function esRespuestaBaseTecnica(valor: unknown): valor is RespuestaBaseTe
   if (typeof data !== 'object' || data === null) return false
   return typeof (data as Record<string, unknown>).message === 'string'
 }
+
+// ---------------------------------------------------------------------------
+// Autenticación y usuarios (Sprint 1).
+// OJO: los nombres de campos y códigos de error son el acuerdo con Backend.
+// Si Backend los cambia, solo se edita esta sección.
+// ---------------------------------------------------------------------------
+
+export const RUTA_REGISTRO = '/api/v1/auth/register'
+export const RUTA_MI_PERFIL = '/api/v1/users/me'
+
+/** Códigos de error que devuelve la API en `{ error: { code } }`. */
+export const CODIGO_USERNAME_OCUPADO = 'USERNAME_TAKEN'
+export const CODIGO_CORREO_OCUPADO = 'EMAIL_TAKEN'
+
+/** Perfil de usuario guardado en Firestore (lo devuelve la API). */
+export interface Perfil {
+  uid: string
+  username: string
+  firstName: string
+  lastName: string
+  email: string
+  avatar: string
+}
+
+/** Cuerpo de POST /auth/register. */
+export interface CuerpoRegistro {
+  firstName: string
+  lastName: string
+  username: string
+  avatar: string
+  email: string
+  password: string
+}
+
+export function esRespuestaPerfil(valor: unknown): valor is { data: Perfil } {
+  if (typeof valor !== 'object' || valor === null) return false
+  const data = (valor as Record<string, unknown>).data
+  if (typeof data !== 'object' || data === null) return false
+  return typeof (data as Record<string, unknown>).username === 'string'
+}

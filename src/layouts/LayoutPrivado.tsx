@@ -5,7 +5,7 @@ import Logo from '../components/Logo'
 import NavegacionPrivada from '../components/NavegacionPrivada'
 import PiePagina from '../components/PiePagina'
 
-// PENDIENTE: proteger rutas privadas en el Sprint 1
+// Las rutas privadas se protegen en routes/guardas.tsx (RutaPrivada)
 function LayoutPrivado() {
   useFocoAlNavegar()
   return (

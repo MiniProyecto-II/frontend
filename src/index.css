@@ -29,6 +29,7 @@
   /* Tintes tenues sobre la superficie (nunca bloques saturados) */
   --color-error-tenue: color-mix(in srgb, var(--color-error) 12%, var(--color-superficie));
   --color-exito-tenue: color-mix(in srgb, var(--color-exito) 10%, var(--color-superficie));
+  --color-aviso-tenue: color-mix(in srgb, var(--color-aviso) 12%, var(--color-superficie));
 
   --animate-aparecer: aparecer 150ms ease-out;
 
