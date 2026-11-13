@@ -27,6 +27,7 @@ export const router = createBrowserRouter([
       {
         element: <RutaSoloInvitados />,
         children: [
+          { path: '/ingreso', element: <Ingreso /> },
           { path: '/registro', element: <Registro /> },
         ],
       },
@@ -46,7 +47,6 @@ export const router = createBrowserRouter([
     element: <LayoutPublico />,
     children: [
       { path: '/', element: <Inicio /> },
-      { path: '/ingreso', element: <Ingreso /> },
       { path: '/base-tecnica', element: <BaseTecnica /> },
       { path: '/accesibilidad', element: <Accesibilidad /> },
       // Página de apoyo (404)

@@ -10,6 +10,7 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState, type 
 import { ApiError } from '../services/api'
 import type { CuerpoRegistro, Perfil } from '../services/contrato'
 import { auth } from '../services/firebase'
+import { limpiarRutaPendiente } from '../services/rutaPendiente'
 import {
   completarPerfilGoogle,
   obtenerMiPerfil,
@@ -58,6 +59,9 @@ export interface AuthValor {
   /** Datos de la cuenta de Firebase (útil cuando aún no hay perfil, p. ej. Google sin username). */
   datosAuth: DatosAuth | null
   errorSesion: string | null
+  /** true si la sesión terminó porque la persona pulsó «Cerrar sesión» (no por caducidad). */
+  cierreVoluntario: boolean
+  iniciarSesion: (correo: string, contrasena: string) => Promise<void>
   iniciarConGoogle: () => Promise<void>
   registrar: (datos: DatosRegistro) => Promise<void>
   completarPerfil: (username: string) => Promise<void>
@@ -110,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [datosAuth, setDatosAuth] = useState<DatosAuth | null>(null)
   const [errorSesion, setErrorSesion] = useState<string | null>(null)
+  const [cierreVoluntario, setCierreVoluntario] = useState(false)
 
   // Evita que una respuesta lenta pise a una más reciente.
   const secuencia = useRef(0)
@@ -172,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ejecutarIngreso = useCallback(
     async (accion: () => Promise<User>) => {
       if (!auth) throw new ErrorAuth(MENSAJE_SIN_FIREBASE, 'otro')
+      setCierreVoluntario(false)
       accionEnCurso.current = true
       try {
         const usuario = await accion()
@@ -184,6 +190,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     [descartarSesion, sincronizar],
+  )
+
+  const iniciarSesion = useCallback(
+    (correo: string, contrasena: string) =>
+      ejecutarIngreso(async () => {
+        const credencial = await signInWithEmailAndPassword(auth!, correo.trim(), contrasena)
+        return credencial.user
+      }),
+    [ejecutarIngreso],
   )
 
   const iniciarConGoogle = useCallback(
@@ -235,6 +250,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const cerrarSesion = useCallback(async () => {
+    setCierreVoluntario(true)
+    limpiarRutaPendiente()
     await descartarSesion()
   }, [descartarSesion])
 
@@ -249,6 +266,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      cierreVoluntario,
+      iniciarSesion,
       iniciarConGoogle,
       registrar,
       completarPerfil,
@@ -260,6 +279,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       perfil,
       datosAuth,
       errorSesion,
+      cierreVoluntario,
+      iniciarSesion,
       iniciarConGoogle,
       registrar,
       completarPerfil,

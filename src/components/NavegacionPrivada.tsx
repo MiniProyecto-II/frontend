@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { iniciales } from '../utils/validaciones'
+import AvatarIniciales from './AvatarIniciales'
 
 const claseEnlace = ({ isActive }: { isActive: boolean }) =>
   `flex min-h-12 items-center gap-3 rounded-lg px-3 font-medium transition-[color,background-color] duration-150 ${
@@ -32,6 +35,7 @@ const iconoLibro = (
 
 /** Navegación del área privada: salas arriba y bloque de cuenta abajo (según el prototipo). */
 function NavegacionPrivada() {
+  const { perfil, cerrarSesion } = useAuth()
   return (
     <div className="flex flex-1 flex-col gap-4 md:justify-between">
       <nav aria-label="Salas">
@@ -66,6 +70,12 @@ function NavegacionPrivada() {
         <p className="hidden px-3 pb-1 text-xs font-semibold tracking-wider text-texto-suave uppercase md:block">
           Tu cuenta
         </p>
+        {perfil && (
+          <div className="hidden items-center gap-3 px-3 pb-2 md:flex">
+            <AvatarIniciales iniciales={iniciales(perfil.firstName, perfil.lastName)} avatar={perfil.avatar} />
+            <p className="min-w-0 truncate font-semibold text-texto">{perfil.username}</p>
+          </div>
+        )}
         <ul className="flex flex-wrap gap-1 md:flex-col">
           <li>
             <NavLink
@@ -77,9 +87,9 @@ function NavegacionPrivada() {
             </NavLink>
           </li>
           <li>
-            {/* PENDIENTE: Sprint 1 — cerrar la sesión real */}
             <button
               type="button"
+              onClick={() => void cerrarSesion()}
               className="flex min-h-12 cursor-pointer items-center rounded-lg px-3 font-medium text-texto-suave transition-[color,background-color] duration-150 hover:bg-secundario hover:text-texto md:w-full md:justify-center"
             >
               Cerrar sesión

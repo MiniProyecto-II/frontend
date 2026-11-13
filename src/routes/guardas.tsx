@@ -1,6 +1,8 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import EstadoError from '../components/EstadoError'
 import { useAuth } from '../hooks/useAuth'
+import { guardarRutaPendiente, leerRutaPendiente, limpiarRutaPendiente } from '../services/rutaPendiente'
 
 /** Pantalla completa mientras se comprueba la sesión (un lector de pantalla la anuncia). */
 function PantallaComprobando() {
@@ -36,10 +38,20 @@ function PantallaErrorSesion() {
 
 /** Rutas privadas: sin sesión van al login (y recuerdan a dónde volver); sin username van a elegirlo. */
 export function RutaPrivada() {
-  const { estado } = useAuth()
+  const { estado, cierreVoluntario } = useAuth()
+  const { pathname, search, hash } = useLocation()
+  const sinSesion = estado === 'anonimo'
+
+  useEffect(() => {
+    if (sinSesion && !cierreVoluntario) guardarRutaPendiente(`${pathname}${search}${hash}`)
+    if (estado === 'autenticado') limpiarRutaPendiente()
+  }, [estado, sinSesion, cierreVoluntario, pathname, search, hash])
+
   if (estado === 'cargando') return <PantallaComprobando />
   if (estado === 'error') return <PantallaErrorSesion />
-  if (estado === 'anonimo') return <Navigate to="/ingreso" replace />
+  if (sinSesion) {
+    return <Navigate to="/ingreso" replace state={cierreVoluntario ? { sesionCerrada: true } : undefined} />
+  }
   if (estado === 'sin-username') return <Navigate to="/registro/usuario" replace />
   return <Outlet />
 }
@@ -48,7 +60,7 @@ export function RutaPrivada() {
 export function RutaSoloInvitados() {
   const { estado } = useAuth()
   if (estado === 'cargando') return <PantallaComprobando />
-  if (estado === 'autenticado') return <Navigate to="/salas" replace />
+  if (estado === 'autenticado') return <Navigate to={leerRutaPendiente()} replace />
   if (estado === 'sin-username') return <Navigate to="/registro/usuario" replace />
   return <Outlet />
 }
@@ -59,6 +71,6 @@ export function RutaCompletarPerfil() {
   if (estado === 'cargando') return <PantallaComprobando />
   if (estado === 'error') return <PantallaErrorSesion />
   if (estado === 'anonimo') return <Navigate to="/ingreso" replace />
-  if (estado === 'autenticado') return <Navigate to="/salas" replace />
+  if (estado === 'autenticado') return <Navigate to={leerRutaPendiente()} replace />
   return <Outlet />
 }
