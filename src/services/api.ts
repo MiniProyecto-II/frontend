@@ -46,7 +46,7 @@ function construirUrl(ruta: string): string {
 }
 
 interface OpcionesPeticion {
-  metodo?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  metodo?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   cuerpo?: unknown
   signal?: AbortSignal
   /** Si es true, envía el ID Token de Firebase en la cabecera Authorization. */

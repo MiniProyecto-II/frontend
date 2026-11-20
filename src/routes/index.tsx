@@ -9,7 +9,6 @@ import EditarPerfil from '../pages/EditarPerfil'
 import EditarSala from '../pages/EditarSala'
 import EliminarCuenta from '../pages/EliminarCuenta'
 import Ingreso from '../pages/Ingreso'
-import Inicio from '../pages/Inicio'
 import MisSalas from '../pages/MisSalas'
 import NoEncontrada from '../pages/NoEncontrada'
 import Perfil from '../pages/Perfil'
@@ -46,7 +45,7 @@ export const router = createBrowserRouter([
     // Pantallas públicas
     element: <LayoutPublico />,
     children: [
-      { path: '/', element: <Inicio /> },
+      { path: '/', element: <Navigate to="/ingreso" replace /> },
       { path: '/base-tecnica', element: <BaseTecnica /> },
       { path: '/accesibilidad', element: <Accesibilidad /> },
       // Página de apoyo (404)
