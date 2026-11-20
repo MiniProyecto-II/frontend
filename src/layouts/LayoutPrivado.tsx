@@ -7,15 +7,15 @@ import SaltarAlContenido from '../components/SaltarAlContenido'
 import { useFocoAlNavegar } from '../hooks/useFocoAlNavegar'
 
 function obtenerTituloBarraMovil(pathname: string): string {
-  if (pathname === '/salas') return 'Mis salas'
-  if (pathname === '/salas/crear') return 'Crear sala'
-  if (pathname === '/salas/unirse') return 'Unirse con ID'
-  if (pathname.endsWith('/editar')) return 'Editar sala'
-  if (pathname.endsWith('/eliminar')) return 'Eliminar sala'
-  if (pathname.startsWith('/salas/')) return 'Sala de estudio'
   if (pathname === '/perfil') return 'Mi perfil'
   if (pathname === '/perfil/editar') return 'Editar perfil'
   if (pathname === '/perfil/eliminar') return 'Eliminar cuenta'
+  if (pathname === '/salas') return 'Mis salas'
+  if (pathname === '/salas/crear') return 'Crear sala'
+  if (pathname === '/salas/unirse') return 'Unirse con ID'
+  if (pathname.startsWith('/salas/') && pathname.endsWith('/editar')) return 'Editar sala'
+  if (pathname.startsWith('/salas/') && pathname.endsWith('/eliminar')) return 'Eliminar sala'
+  if (pathname.startsWith('/salas/')) return 'Sala de estudio'
   return 'Salón de Estudio'
 }
 
