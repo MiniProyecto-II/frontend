@@ -94,3 +94,28 @@ export interface CuerpoActualizarPerfil {
   email: string
   avatar: string
 }
+
+// ---------------------------------------------------------------------------
+// Sprint 2: Salas de estudio (US-06)
+// ---------------------------------------------------------------------------
+
+export const RUTA_SALAS = '/api/v1/rooms'
+
+export interface ParticipanteSala {
+  uid: string
+  username: string
+  iniciales: string
+  avatar?: string
+}
+
+export interface SalaEstudio {
+  id: string
+  nombre: string
+  anfitrionUid: string
+  esAnfitrion: boolean
+  participantes: ParticipanteSala[]
+}
+
+export interface CuerpoCrearSala {
+  nombre: string
+}
