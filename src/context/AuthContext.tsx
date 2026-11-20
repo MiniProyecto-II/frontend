@@ -18,6 +18,7 @@ import {
   obtenerMiPerfil,
   registrarUsuario,
   comprobarUsername,
+  eliminarMiCuenta,
 } from '../services/usuariosService'
 
 /**
@@ -64,6 +65,7 @@ export interface AuthValor {
   errorSesion: string | null
   /** true si la sesión terminó porque la persona pulsó «Cerrar sesión» (no por caducidad). */
   cierreVoluntario: boolean
+  cuentaEliminada: boolean
   iniciarSesion: (correo: string, contrasena: string) => Promise<void>
   iniciarConGoogle: () => Promise<void>
   registrar: (datos: DatosRegistro) => Promise<void>
@@ -71,6 +73,7 @@ export interface AuthValor {
   cerrarSesion: () => Promise<void>
   reintentarSesion: () => Promise<void>
   actualizarPerfilLocal: (nuevoPerfil: Perfil) => void
+  eliminarCuenta: () => Promise<void>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -125,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [datosAuth, setDatosAuth] = useState<DatosAuth | null>(null)
   const [errorSesion, setErrorSesion] = useState<string | null>(null)
   const [cierreVoluntario, setCierreVoluntario] = useState(false)
+  const [cuentaEliminada, setCuentaEliminada] = useState(false)
 
   // Evita que una respuesta lenta pise a una más reciente.
   const secuencia = useRef(0)
@@ -189,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (accion: () => Promise<User>) => {
       if (!auth) throw new ErrorAuth(MENSAJE_SIN_FIREBASE, 'otro')
       setCierreVoluntario(false)
+      setCuentaEliminada(false)
       accionEnCurso.current = true
       try {
         const usuario = await accion()
@@ -285,6 +290,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await descartarSesion()
   }, [descartarSesion])
 
+  const eliminarCuenta = useCallback(async () => {
+    await eliminarMiCuenta()
+    setCuentaEliminada(true)
+    setCierreVoluntario(true)
+    limpiarRutaPendiente()
+    await descartarSesion()
+  }, [descartarSesion])
+
   const reintentarSesion = useCallback(async () => {
     setEstado('cargando')
     await sincronizar(auth?.currentUser ?? null).catch(() => undefined)
@@ -308,6 +321,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cerrarSesion,
       reintentarSesion,
       actualizarPerfilLocal,
+      eliminarCuenta,
+      cuentaEliminada,
     }),
     [
       estado,
@@ -322,6 +337,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cerrarSesion,
       reintentarSesion,
       actualizarPerfilLocal,
+      eliminarCuenta,
+      cuentaEliminada,
     ],
   )
 
