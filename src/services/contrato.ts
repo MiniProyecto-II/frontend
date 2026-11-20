@@ -79,3 +79,18 @@ export function normalizarPerfil(perfil: Perfil): Perfil {
   const datos = perfil as Perfil & { nombres?: string; apellidos?: string }
   return { ...perfil, firstName: datos.firstName ?? datos.nombres ?? '', lastName: datos.lastName ?? datos.apellidos ?? '' }
 }
+
+// ---------------------------------------------------------------------------
+// Sprint 2: Perfil (US-04 y US-05)
+// ---------------------------------------------------------------------------
+
+export const RUTA_ACTUALIZAR_PERFIL = '/api/v1/users/me'
+export const RUTA_ELIMINAR_CUENTA = '/api/v1/users/me'
+
+export interface CuerpoActualizarPerfil {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  avatar: string
+}
