@@ -4,6 +4,7 @@ import {
   RUTA_COMPLETAR_GOOGLE,
   RUTA_MI_PERFIL,
   RUTA_REGISTRO,
+  RUTA_ELIMINAR_CUENTA,
   esRespuestaPerfil,
   normalizarPerfil,
   type CuerpoActualizarPerfil,
@@ -106,4 +107,18 @@ export async function actualizarMiPerfil(
     email: correoLimpio,
     avatar: datos.avatar,
   }
+}
+
+/** Elimina la cuenta y el perfil del usuario autenticado (US-05). */
+export async function eliminarMiCuenta(signal?: AbortSignal): Promise<void> {
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    await new Promise((r) => setTimeout(r, 600))
+    return
+  }
+
+  await peticion(RUTA_ELIMINAR_CUENTA, {
+    metodo: 'DELETE',
+    autenticada: true,
+    signal,
+  })
 }
