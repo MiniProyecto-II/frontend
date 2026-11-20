@@ -145,11 +145,9 @@ function Ingreso() {
           <Boton type="submit" cargando={enviando}>
             {enviando ? 'Iniciando sesión…' : conError ? 'Corregir e iniciar sesión' : 'Iniciar sesión'}
           </Boton>
-          {!conError && (
-            <Boton variante="secundario" cargando={enviandoGoogle} onClick={() => void entrarConGoogle()}>
-              {enviandoGoogle ? 'Abriendo Google…' : 'Continuar con Google'}
-            </Boton>
-          )}
+          <Boton variante="secundario" cargando={enviandoGoogle} onClick={() => void entrarConGoogle()}>
+            {enviandoGoogle ? 'Abriendo Google…' : 'Continuar con Google'}
+          </Boton>
         </div>
         <p role="status" className="sr-only">
           {enviando ? 'Iniciando sesión…' : enviandoGoogle ? 'Abriendo Google…' : ''}
@@ -157,7 +155,7 @@ function Ingreso() {
       </form>
 
       <div className="flex flex-col gap-1 border-t border-borde pt-5">
-        {!conError && <p className="text-sm text-texto-suave">¿Es tu primera vez por aquí?</p>}
+        <p className="text-sm text-texto-suave">¿Es tu primera vez por aquí?</p>
         <Boton variante="texto" to="/registro">
           Crear cuenta
         </Boton>

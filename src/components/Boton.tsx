@@ -1,12 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-type Variante = 'primario' | 'secundario' | 'texto'
+type Variante = 'primario' | 'secundario' | 'texto' | 'peligro' 
 
 const estilos: Record<Variante, string> = {
   primario: 'bg-primario text-texto hover:bg-primario-hover active:bg-primario-activo',
   secundario: 'border border-borde bg-secundario text-texto hover:bg-borde',
   texto: 'text-texto-suave hover:bg-superficie hover:text-texto',
+  peligro: 'border border-red-400/25 bg-[#8f242e] text-white hover:bg-[#a62c37] active:bg-[#761c25]',
 }
 
 interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
