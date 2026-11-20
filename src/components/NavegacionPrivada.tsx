@@ -33,15 +33,19 @@ const iconoLibro = (
   </>
 )
 
-/** Navegación del área privada: salas arriba y bloque de cuenta abajo (según el prototipo). */
-function NavegacionPrivada() {
+interface Props {
+  onNavegar?: () => void
+}
+
+/** Navegación del área privada: salas arriba y bloque de cuenta abajo. */
+function NavegacionPrivada({ onNavegar }: Props) {
   const { perfil, cerrarSesion } = useAuth()
   return (
-    <div className="flex flex-1 flex-col gap-4 md:justify-between">
+    <div className="flex flex-1 flex-col justify-between gap-6">
       <nav aria-label="Salas">
-        <ul className="flex flex-wrap gap-1 md:flex-col">
+        <ul className="flex flex-col gap-1">
           <li>
-            <NavLink to="/salas" end className={claseEnlace}>
+            <NavLink to="/salas" end className={claseEnlace} onClick={onNavegar}>
               <Icono>
                 <path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" />
               </Icono>
@@ -49,13 +53,13 @@ function NavegacionPrivada() {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/salas/crear" end className={claseEnlace}>
+            <NavLink to="/salas/crear" end className={claseEnlace} onClick={onNavegar}>
               <Icono>{iconoLibro}</Icono>
               Crear sala
             </NavLink>
           </li>
           <li>
-            <NavLink to="/salas/unirse" end className={claseEnlace}>
+            <NavLink to="/salas/unirse" end className={claseEnlace} onClick={onNavegar}>
               <Icono>{iconoLibro}</Icono>
               Unirse con ID
             </NavLink>
@@ -63,25 +67,21 @@ function NavegacionPrivada() {
         </ul>
       </nav>
 
-      <nav
-        aria-label="Cuenta"
-        className="rounded-xl border border-borde bg-superficie p-2 md:p-3"
-      >
-        <p className="hidden px-3 pb-1 text-xs font-semibold tracking-wider text-texto-suave uppercase md:block">
-          Tu cuenta
-        </p>
+      <nav aria-label="Cuenta" className="rounded-xl border border-borde bg-superficie p-3">
+        <p className="px-3 pb-1 text-xs font-semibold tracking-wider text-texto-suave uppercase">Tu cuenta</p>
         {perfil && (
-          <div className="hidden items-center gap-3 px-3 pb-2 md:flex">
+          <div className="flex items-center gap-3 px-3 pb-2">
             <AvatarIniciales iniciales={iniciales(perfil.firstName, perfil.lastName)} avatar={perfil.avatar} />
             <p className="min-w-0 truncate font-semibold text-texto">{perfil.username}</p>
           </div>
         )}
-        <ul className="flex flex-wrap gap-1 md:flex-col">
+        <ul className="flex flex-col gap-1">
           <li>
             <NavLink
               to="/perfil"
               end
-              className={({ isActive }) => `${claseEnlace({ isActive })} md:justify-center`}
+              onClick={onNavegar}
+              className={({ isActive }) => `${claseEnlace({ isActive })} justify-center`}
             >
               Mi perfil
             </NavLink>
@@ -89,8 +89,11 @@ function NavegacionPrivada() {
           <li>
             <button
               type="button"
-              onClick={() => void cerrarSesion()}
-              className="flex min-h-12 cursor-pointer items-center rounded-lg px-3 font-medium text-texto-suave transition-[color,background-color] duration-150 hover:bg-secundario hover:text-texto md:w-full md:justify-center"
+              onClick={() => {
+                onNavegar?.()
+                void cerrarSesion()
+              }}
+              className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-lg px-3 font-medium text-texto-suave transition-[color,background-color] duration-150 hover:bg-secundario hover:text-texto"
             >
               Cerrar sesión
             </button>
