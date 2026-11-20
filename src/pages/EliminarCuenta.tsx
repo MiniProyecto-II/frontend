@@ -95,16 +95,15 @@ function EliminarCuenta() {
             Conservar mi cuenta
           </Boton>
 
-          <button
-            type="button"
+          <Boton
+            variante="peligro"
+            cargando={eliminando}
             onClick={() => {
               void confirmarEliminacion()
             }}
-            aria-disabled={eliminando || undefined}
-            className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-700 px-6 py-3 text-center font-semibold text-white transition-colors duration-150 hover:bg-red-600 active:bg-red-800 aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
           >
             {eliminando ? 'Eliminando cuenta…' : 'Eliminar cuenta'}
-          </button>
+          </Boton>
         </div>
       </div>
     </section>

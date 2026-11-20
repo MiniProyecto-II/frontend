@@ -138,3 +138,50 @@ export async function crearSalaEstudio(
 
   return normalizarSala(data, usuario.uid)
 }
+
+/** Consulta una sala por su ID (GET /api/v1/rooms/{roomId}). */
+export async function obtenerSalaPorId(
+  roomId: string,
+  uidUsuario: string,
+  signal?: AbortSignal,
+): Promise<SalaEstudio> {
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    await new Promise((r) => setTimeout(r, 300))
+    const encontradas = leerSalasMock(uidUsuario)
+    const sala = encontradas.find((s) => s.id === roomId)
+    if (!sala) throw new ApiError('La sala no existe o fue eliminada.', 404, 'ROOM_NOT_FOUND')
+    return sala
+  }
+
+  const respuesta = await peticion(`${RUTA_SALAS}/${encodeURIComponent(roomId)}`, {
+    autenticada: true,
+    signal,
+  })
+
+  const data =
+    typeof respuesta === 'object' && respuesta !== null && 'data' in respuesta
+      ? (respuesta as Record<string, unknown>).data
+      : respuesta
+
+  return normalizarSala(data, uidUsuario)
+}
+
+/** Elimina definitivamente una sala y sus mensajes (DELETE /api/v1/rooms/{roomId}). */
+export async function eliminarSalaEstudio(
+  roomId: string,
+  uidUsuario: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    await new Promise((r) => setTimeout(r, 450))
+    const actuales = leerSalasMock(uidUsuario)
+    guardarSalasMock(actuales.filter((s) => s.id !== roomId))
+    return
+  }
+
+  await peticion(`${RUTA_SALAS}/${encodeURIComponent(roomId)}`, {
+    metodo: 'DELETE',
+    autenticada: true,
+    signal,
+  })
+}

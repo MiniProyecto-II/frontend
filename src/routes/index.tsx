@@ -16,6 +16,7 @@ import Registro from '../pages/Registro'
 import RegistroUsuario from '../pages/RegistroUsuario'
 import Sala from '../pages/Sala'
 import UnirseSala from '../pages/UnirseSala'
+import EliminarSala from '../pages/EliminarSala'
 import { RutaCompletarPerfil, RutaPrivada, RutaSoloInvitados } from './guardas'
 
 export const router = createBrowserRouter([
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
           { path: '/salas/unirse', element: <UnirseSala /> },
           { path: '/salas/:id', element: <Sala /> },
           { path: '/salas/:id/editar', element: <EditarSala /> },
+          { path: '/salas/:id/eliminar', element: <EliminarSala /> },
           { path: '/perfil', element: <Perfil /> },
           { path: '/perfil/editar', element: <EditarPerfil /> },
           { path: '/perfil/eliminar', element: <EliminarCuenta /> },

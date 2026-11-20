@@ -60,7 +60,7 @@ function MisSalas() {
   }
 
   return (
-    <section aria-labelledby="titulo-mis-salas" className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <section aria-labelledby="titulo-mis-salas" className="mx-auto flex w-full max-w-lg flex-col gap-6">
       <header className="flex flex-col gap-1.5">
         <h1 id="titulo-mis-salas" tabIndex={-1} className="text-3xl font-bold tracking-tight text-texto outline-none">
           {TITULO}
@@ -157,7 +157,7 @@ function MisSalas() {
                       <Boton to={`/salas/${encodeURIComponent(sala.id)}/editar`} variante="texto">
                         Editar
                       </Boton>
-                      <Boton to={`/salas/${encodeURIComponent(sala.id)}/editar`} variante="texto">
+                      <Boton to={`/salas/${encodeURIComponent(sala.id)}/eliminar`} variante="texto">
                         Eliminar
                       </Boton>
                     </>
