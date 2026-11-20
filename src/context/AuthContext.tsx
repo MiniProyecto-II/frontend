@@ -70,6 +70,7 @@ export interface AuthValor {
   completarPerfil: (username: string) => Promise<void>
   cerrarSesion: () => Promise<void>
   reintentarSesion: () => Promise<void>
+  actualizarPerfilLocal: (nuevoPerfil: Perfil) => void
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -135,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setDatosAuth(null)
     setErrorSesion(null)
     setEstado('anonimo')
+  
   }, [])
 
   const descartarSesion = useCallback(async () => {
@@ -288,6 +290,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sincronizar(auth?.currentUser ?? null).catch(() => undefined)
   }, [sincronizar])
 
+  const actualizarPerfilLocal = useCallback((nuevoPerfil: Perfil) => {
+  setPerfil(nuevoPerfil)
+  }, [])
+
   const valor = useMemo<AuthValor>(
     () => ({
       estado,
@@ -301,6 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       completarPerfil,
       cerrarSesion,
       reintentarSesion,
+      actualizarPerfilLocal,
     }),
     [
       estado,
@@ -314,6 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       completarPerfil,
       cerrarSesion,
       reintentarSesion,
+      actualizarPerfilLocal,
     ],
   )
 
