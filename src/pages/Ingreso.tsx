@@ -11,6 +11,7 @@ import { useTituloPagina } from '../hooks/useTituloPagina'
 interface EstadoNavegacion {
   sesionCerrada?: boolean
   googleCancelado?: boolean
+  cuentaEliminada?: boolean
 }
 
 function Ingreso() {
@@ -28,6 +29,7 @@ function Ingreso() {
 
   const ocupado = enviando || enviandoGoogle
   const conError = errorGeneral !== null
+  const [eliminada, setEliminada] = useState(estadoNav.cuentaEliminada === true)
 
   useTituloPagina(cancelado ? 'Ingreso cancelado' : conError ? 'No pudimos iniciar sesión' : 'Iniciar sesión')
 
@@ -72,6 +74,15 @@ function Ingreso() {
       setErrorGeneral(err instanceof Error ? err.message : 'Correo o contraseña incorrectos.')
       setEnviando(false)
     }
+  }
+
+  if (eliminada) {
+    return (
+      <TarjetaAuth titulo="Tu cuenta fue eliminada" subtitulo="Has vuelto al acceso de Salón de Estudio.">
+        <Alerta tipo="exito">Tu perfil se eliminó y la sesión se cerró.</Alerta>
+        <Boton onClick={() => setEliminada(false)}>Ir a Iniciar sesión</Boton>
+      </TarjetaAuth>
+    )
   }
 
   if (cancelado) {
@@ -134,11 +145,9 @@ function Ingreso() {
           <Boton type="submit" cargando={enviando}>
             {enviando ? 'Iniciando sesión…' : conError ? 'Corregir e iniciar sesión' : 'Iniciar sesión'}
           </Boton>
-          {!conError && (
-            <Boton variante="secundario" cargando={enviandoGoogle} onClick={() => void entrarConGoogle()}>
-              {enviandoGoogle ? 'Abriendo Google…' : 'Continuar con Google'}
-            </Boton>
-          )}
+          <Boton variante="secundario" cargando={enviandoGoogle} onClick={() => void entrarConGoogle()}>
+            {enviandoGoogle ? 'Abriendo Google…' : 'Continuar con Google'}
+          </Boton>
         </div>
         <p role="status" className="sr-only">
           {enviando ? 'Iniciando sesión…' : enviandoGoogle ? 'Abriendo Google…' : ''}
@@ -146,7 +155,7 @@ function Ingreso() {
       </form>
 
       <div className="flex flex-col gap-1 border-t border-borde pt-5">
-        {!conError && <p className="text-sm text-texto-suave">¿Es tu primera vez por aquí?</p>}
+        <p className="text-sm text-texto-suave">¿Es tu primera vez por aquí?</p>
         <Boton variante="texto" to="/registro">
           Crear cuenta
         </Boton>

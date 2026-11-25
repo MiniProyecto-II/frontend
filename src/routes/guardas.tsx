@@ -38,7 +38,7 @@ function PantallaErrorSesion() {
 
 /** Rutas privadas: sin sesión van al login (y recuerdan a dónde volver); sin username van a elegirlo. */
 export function RutaPrivada() {
-  const { estado, cierreVoluntario } = useAuth()
+  const { estado, cierreVoluntario, cuentaEliminada } = useAuth()
   const { pathname, search, hash } = useLocation()
   const sinSesion = estado === 'anonimo'
 
@@ -50,10 +50,15 @@ export function RutaPrivada() {
   if (estado === 'cargando') return <PantallaComprobando />
   if (estado === 'error') return <PantallaErrorSesion />
   if (sinSesion) {
-    return <Navigate to="/ingreso" replace state={cierreVoluntario ? { sesionCerrada: true } : undefined} />
+    return <Navigate to="/ingreso" replace state={cuentaEliminada
+            ? { cuentaEliminada: true }
+            : cierreVoluntario
+              ? { sesionCerrada: true }
+              : undefined} />
   }
   if (estado === 'sin-username') return <Navigate to="/registro/usuario" replace />
   return <Outlet />
+  
 }
 
 /** Ingreso y registro: si ya hay sesión no tienen sentido, se va al panel (o a la ruta que se pidió). */

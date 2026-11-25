@@ -46,7 +46,7 @@ function construirUrl(ruta: string): string {
 }
 
 interface OpcionesPeticion {
-  metodo?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  metodo?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   cuerpo?: unknown
   signal?: AbortSignal
   /** Si es true, envía el ID Token de Firebase en la cabecera Authorization. */
@@ -138,13 +138,16 @@ export async function peticion(ruta: string, opciones: OpcionesPeticion = {}): P
   if (respuesta.status === 401 && autenticada) respuesta = await enviar(true)
 
   let json: unknown = null
-  try {
-    json = await respuesta.json()
-  } catch (err) {
-    if (signal?.aborted) throw err
-    if (respuesta.ok) throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
+  const texto = await respuesta.text()
+  if (texto.trim() !== '') {
+    try {
+      json = JSON.parse(texto)
+    } catch (err) {
+      if (signal?.aborted) throw err
+      if (respuesta.ok) throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
+    }
   }
-
+  
   if (!respuesta.ok) {
     const detalle = leerErrorApi(json)
     const generico =

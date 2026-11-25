@@ -1,27 +1,59 @@
 import { ApiError, peticion } from './api'
 import {
+  RUTA_ACTUALIZAR_PERFIL,
   RUTA_COMPLETAR_GOOGLE,
+  RUTA_ELIMINAR_CUENTA,
   RUTA_MI_PERFIL,
   RUTA_REGISTRO,
   esRespuestaPerfil,
   normalizarPerfil,
+  type CuerpoActualizarPerfil,
   type CuerpoCompletarGoogle,
   type CuerpoRegistro,
   type Perfil,
 } from './contrato'
 
+const PREFIJO_AVATAR_URL = 'https://salon-estudio.app/avatar/'
+
+function serializarAvatarParaApi(avatar: string): string {
+  const limpio = avatar.trim()
+  if (!limpio) return ''
+  if (limpio.startsWith('http://') || limpio.startsWith('https://')) return limpio
+  return `${PREFIJO_AVATAR_URL}${encodeURIComponent(limpio)}`
+}
+
+export function deserializarAvatarDeApi(avatar: string): string {
+  if (avatar.startsWith(PREFIJO_AVATAR_URL)) {
+    return decodeURIComponent(avatar.slice(PREFIJO_AVATAR_URL.length))
+  }
+  return avatar
+}
+
 /** Guarda el perfil por API. La cuenta ya fue creada con Firebase Authentication. */
 export async function registrarUsuario(cuerpo: CuerpoRegistro, signal?: AbortSignal): Promise<void> {
   await peticion(RUTA_REGISTRO, {
-    metodo: 'POST', autenticada: true, signal,
-    cuerpo: { nombres: cuerpo.firstName, apellidos: cuerpo.lastName, username: cuerpo.username, avatar: cuerpo.avatar },
+    metodo: 'POST',
+    autenticada: true,
+    signal,
+    cuerpo: {
+      nombres: cuerpo.firstName,
+      apellidos: cuerpo.lastName,
+      username: cuerpo.username,
+      avatar: serializarAvatarParaApi(cuerpo.avatar),
+    },
   })
 }
 
 export async function comprobarUsername(username: string): Promise<void> {
-  const respuesta = await peticion(`/api/v1/users/check-username/${encodeURIComponent(username)}`) as { data?: { available?: boolean } }
-  if (typeof respuesta.data?.available !== 'boolean') throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
-  if (!respuesta.data.available) throw new ApiError('Ese nombre de usuario ya está en uso. Prueba con otro.', 409, 'USERNAME_TAKEN')
+  const respuesta = (await peticion(`/api/v1/users/check-username/${encodeURIComponent(username)}`)) as {
+    data?: { available?: boolean }
+  }
+  if (typeof respuesta.data?.available !== 'boolean') {
+    throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
+  }
+  if (!respuesta.data.available) {
+    throw new ApiError('Ese nombre de usuario ya está en uso. Prueba con otro.', 409, 'USERNAME_TAKEN')
+  }
 }
 
 /**
@@ -34,7 +66,8 @@ export async function obtenerMiPerfil(signal?: AbortSignal): Promise<Perfil | nu
     if (!esRespuestaPerfil(respuesta)) {
       throw new ApiError('La respuesta del servidor no tiene el formato esperado.')
     }
-    return normalizarPerfil(respuesta.data)
+    const normalizado = normalizarPerfil(respuesta.data)
+    return { ...normalizado, avatar: deserializarAvatarDeApi(normalizado.avatar) }
   } catch (err) {
     if (err instanceof ApiError && (err.status === 403 || err.status === 404)) return null
     throw err
@@ -43,6 +76,87 @@ export async function obtenerMiPerfil(signal?: AbortSignal): Promise<Perfil | nu
 
 /** Termina el registro con Google guardando el username elegido. */
 export async function completarPerfilGoogle(datos: CuerpoCompletarGoogle, signal?: AbortSignal): Promise<void> {
-  const cuerpo = datos
+  const cuerpo = {
+    ...datos,
+    avatar: serializarAvatarParaApi(datos.avatar),
+  }
   await peticion(RUTA_COMPLETAR_GOOGLE, { metodo: 'POST', cuerpo, autenticada: true, signal })
+}
+
+/** Actualiza el perfil del usuario autenticado (US-04 · PUT /api/v1/users/profile). */
+export async function actualizarMiPerfil(
+  datos: CuerpoActualizarPerfil,
+  perfilActual: Perfil,
+  signal?: AbortSignal,
+): Promise<Perfil> {
+  const usernameLimpio = datos.username.trim().toLowerCase()
+  const correoLimpio = datos.email.trim().toLowerCase()
+
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    await new Promise((r) => setTimeout(r, 500))
+    const camposError: Record<string, string> = {}
+    if (usernameLimpio !== perfilActual.username && (usernameLimpio === 'andrea' || usernameLimpio === 'admin')) {
+      camposError.username = 'Este nombre ya está en uso.'
+    }
+    if (correoLimpio !== perfilActual.email.toLowerCase() && correoLimpio === 'andrea@correounivalle.edu.co') {
+      camposError.email = 'Este correo ya está registrado.'
+    }
+    if (Object.keys(camposError).length > 0) {
+      throw new ApiError('No pudimos guardar los cambios. Revisa los datos.', 409, 'DUPLICATE_DATA', camposError)
+    }
+    return {
+      ...perfilActual,
+      firstName: datos.firstName.trim(),
+      lastName: datos.lastName.trim(),
+      username: usernameLimpio,
+      email: correoLimpio,
+      avatar: datos.avatar,
+    }
+  }
+
+  // Swagger: correo es opcional (solo cuentas de contraseña; Google devuelve 400 si se intenta cambiar)
+  const cuerpo: Record<string, string> = {
+    nombres: datos.firstName.trim(),
+    apellidos: datos.lastName.trim(),
+    username: usernameLimpio,
+    avatar: serializarAvatarParaApi(datos.avatar),
+  }
+  if (correoLimpio && correoLimpio !== perfilActual.email.toLowerCase()) {
+    cuerpo.email = correoLimpio
+  }
+
+  const respuesta = await peticion(RUTA_ACTUALIZAR_PERFIL, {
+    metodo: 'PUT',
+    autenticada: true,
+    signal,
+    cuerpo,
+  })
+
+  if (esRespuestaPerfil(respuesta)) {
+    const normalizado = normalizarPerfil(respuesta.data)
+    return { ...normalizado, avatar: deserializarAvatarDeApi(normalizado.avatar) }
+  }
+
+  return {
+    ...perfilActual,
+    firstName: datos.firstName.trim(),
+    lastName: datos.lastName.trim(),
+    username: usernameLimpio,
+    email: correoLimpio,
+    avatar: datos.avatar,
+  }
+}
+
+/** Elimina la cuenta y el perfil del usuario autenticado (US-05). */
+export async function eliminarMiCuenta(signal?: AbortSignal): Promise<void> {
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    await new Promise((r) => setTimeout(r, 600))
+    return
+  }
+
+  await peticion(RUTA_ELIMINAR_CUENTA, {
+    metodo: 'DELETE',
+    autenticada: true,
+    signal,
+  })
 }

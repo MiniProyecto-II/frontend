@@ -9,7 +9,6 @@ import EditarPerfil from '../pages/EditarPerfil'
 import EditarSala from '../pages/EditarSala'
 import EliminarCuenta from '../pages/EliminarCuenta'
 import Ingreso from '../pages/Ingreso'
-import Inicio from '../pages/Inicio'
 import MisSalas from '../pages/MisSalas'
 import NoEncontrada from '../pages/NoEncontrada'
 import Perfil from '../pages/Perfil'
@@ -17,6 +16,7 @@ import Registro from '../pages/Registro'
 import RegistroUsuario from '../pages/RegistroUsuario'
 import Sala from '../pages/Sala'
 import UnirseSala from '../pages/UnirseSala'
+import EliminarSala from '../pages/EliminarSala'
 import { RutaCompletarPerfil, RutaPrivada, RutaSoloInvitados } from './guardas'
 
 export const router = createBrowserRouter([
@@ -46,7 +46,7 @@ export const router = createBrowserRouter([
     // Pantallas públicas
     element: <LayoutPublico />,
     children: [
-      { path: '/', element: <Inicio /> },
+      { path: '/', element: <Navigate to="/ingreso" replace /> },
       { path: '/base-tecnica', element: <BaseTecnica /> },
       { path: '/accesibilidad', element: <Accesibilidad /> },
       // Página de apoyo (404)
@@ -65,6 +65,7 @@ export const router = createBrowserRouter([
           { path: '/salas/unirse', element: <UnirseSala /> },
           { path: '/salas/:id', element: <Sala /> },
           { path: '/salas/:id/editar', element: <EditarSala /> },
+          { path: '/salas/:id/eliminar', element: <EliminarSala /> },
           { path: '/perfil', element: <Perfil /> },
           { path: '/perfil/editar', element: <EditarPerfil /> },
           { path: '/perfil/eliminar', element: <EliminarCuenta /> },

@@ -77,5 +77,54 @@ export function esRespuestaPerfil(valor: unknown): valor is { data: Perfil } {
 /** El backend desplegado utiliza nombres/apellidos; la interfaz conserva su modelo. */
 export function normalizarPerfil(perfil: Perfil): Perfil {
   const datos = perfil as Perfil & { nombres?: string; apellidos?: string }
-  return { ...perfil, firstName: datos.firstName ?? datos.nombres ?? '', lastName: datos.lastName ?? datos.apellidos ?? '' }
+  const avatarCrudo = datos.avatar ?? ''
+  const avatarLimpio = avatarCrudo.startsWith('https://salon-estudio.app/avatar/')
+    ? decodeURIComponent(avatarCrudo.slice('https://salon-estudio.app/avatar/'.length))
+    : avatarCrudo
+
+  return {
+    ...perfil,
+    firstName: datos.firstName ?? datos.nombres ?? '',
+    lastName: datos.lastName ?? datos.apellidos ?? '',
+    avatar: avatarLimpio,
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Sprint 2: Perfil y Salas (US-04, US-05 y US-06) — Alineado con Swagger
+// ---------------------------------------------------------------------------
+
+export const RUTA_ACTUALIZAR_PERFIL = '/api/v1/users/profile'
+export const RUTA_ELIMINAR_CUENTA = '/api/v1/users/me'
+export const CODIGO_PERFIL_OCUPADO = 'PROFILE_BUSY'
+
+export interface CuerpoActualizarPerfil {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  avatar: string
+}
+
+export const RUTA_SALAS = '/api/v1/rooms'
+
+export interface ParticipanteSala {
+  uid: string
+  username: string
+  iniciales: string
+  avatar?: string
+}
+
+export interface SalaEstudio {
+  id: string
+  nombre: string
+  anfitrionUid: string
+  anfitrionUsername: string
+  esAnfitrion: boolean
+  participantes: ParticipanteSala[]
+}
+
+export interface CuerpoCrearSala {
+  nombre: string
+}
+
