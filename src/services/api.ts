@@ -38,6 +38,11 @@ function obtenerUrlBase(): string {
     throw new ApiError('VITE_API_URL debe empezar por http:// o https://.')
   }
 
+  // En desarrollo, la API local pasa por Vite: funciona también desde 5174.
+  // En producción se conserva la URL pública configurada.
+  if (import.meta.env.DEV && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) {
+    return url.pathname.replace(/\/+$/, '')
+  }
   return base.replace(/\/+$/, '')
 }
 
