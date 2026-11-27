@@ -25,7 +25,7 @@ function Sala() {
   const navigate = useNavigate()
   const { perfil } = useAuth()
   const estadoNav = (useLocation().state ?? {}) as EstadoSalaNav
-
+  const [salaEliminada, setSalaEliminada] = useState<string | null>(null)
   const [sala, setSala] = useState<SalaEstudio | null>(estadoNav.salaRecienCreada ?? null)
   const [cargando, setCargando] = useState(!estadoNav.salaRecienCreada)
   const [error, setError] = useState<string | null>(null)
@@ -40,6 +40,42 @@ function Sala() {
 
   const nombreSala = sala?.nombre ?? 'Sala de estudio'
   useTituloPagina(`${nombreSala} · Grupo de estudio`)
+
+  useEffect(() => {
+  if (!socket || !sala) return
+
+  function manejarSalaEliminada(datos: {
+    roomId: string
+    roomName?: string
+  }) {
+    if (datos.roomId !== id) return
+
+    setSalaEliminada(datos.roomName || sala!.nombre)
+    setMensajesLocales([])
+    setMensajeInput('')
+    socket.disconnect()
+  }
+
+  socket.on('room-deleted', manejarSalaEliminada)
+
+  return () => {
+    socket.off('room-deleted', manejarSalaEliminada)
+  }
+}, [socket, id, sala])
+useEffect(() => {
+  if (!salaEliminada) return
+
+  const temporizador = window.setTimeout(() => {
+    navigate('/salas', {
+      replace: true,
+      state: {
+        aviso: `El anfitrión eliminó la sala «${salaEliminada}».`,
+      },
+    })
+  }, 3000)
+
+  return () => window.clearTimeout(temporizador)
+}, [salaEliminada, navigate])
 
   useEffect(() => {
     if (estadoNav.salaRecienCreada || !perfil || !id) return
@@ -109,7 +145,12 @@ function Sala() {
           {estadoNav.aviso && (
   <Alerta tipo="error">{estadoNav.aviso}</Alerta>
 )}
-
+{salaEliminada && (
+  <div role="alert" aria-atomic="true">
+    El anfitrión eliminó la sala «{salaEliminada}».
+    Volverás a Mis salas.
+  </div>
+)}
           <div className="flex flex-wrap items-center gap-3 text-xs text-texto-suave">
             <span>
               ID: <strong className="font-mono text-texto">{sala.id}</strong>
