@@ -8,10 +8,12 @@ import { useAuth } from '../hooks/useAuth'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import type { SalaEstudio } from '../services/contrato'
 import { obtenerSalaPorId } from '../services/salasService'
+import Alerta from '../components/Alerta'
 
 interface EstadoSalaNav {
   salaRecienCreada?: SalaEstudio
   esAnfitrion?: boolean
+  aviso?: string
 }
 
 function obtenerIniciales(nombres: string, apellidos: string): string {
@@ -58,6 +60,7 @@ function Sala() {
           setCargando(false)
         }
       })
+    
 
     return () => controller.abort()
   }, [estadoNav.salaRecienCreada, id, perfil])
@@ -94,6 +97,7 @@ function Sala() {
   const totalParticipantes = 1 + otrosParticipantes.length
 
   return (
+    
     <section aria-labelledby="titulo-sala-activa" className="mx-auto flex w-full max-w-6xl flex-col gap-5">
       {/* Cabecera superior con nombre, ID copiable y estado */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-borde pb-4">
@@ -102,6 +106,10 @@ function Sala() {
             <span className="text-texto-suave"># </span>
             {sala.nombre} · Grupo de estudio
           </h1>
+          {estadoNav.aviso && (
+  <Alerta tipo="error">{estadoNav.aviso}</Alerta>
+)}
+
           <div className="flex flex-wrap items-center gap-3 text-xs text-texto-suave">
             <span>
               ID: <strong className="font-mono text-texto">{sala.id}</strong>

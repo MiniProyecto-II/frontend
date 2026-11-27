@@ -4,6 +4,7 @@ import LayoutPrivado from '../layouts/LayoutPrivado'
 import LayoutPublico from '../layouts/LayoutPublico'
 import Accesibilidad from '../pages/Accesibilidad'
 import BaseTecnica from '../pages/BaseTecnica'
+import RutaSoloAnfitrion from './RutaSoloAnfitrion'
 import CrearSala from '../pages/CrearSala'
 import EditarPerfil from '../pages/EditarPerfil'
 import EditarSala from '../pages/EditarSala'
@@ -64,7 +65,10 @@ export const router = createBrowserRouter([
           { path: '/salas/crear', element: <CrearSala /> },
           { path: '/salas/unirse', element: <UnirseSala /> },
           { path: '/salas/:id', element: <Sala /> },
-          { path: '/salas/:id/editar', element: <EditarSala /> },
+          {path: '/salas/:id/editar',element: <RutaSoloAnfitrion />,children: [
+    { index: true, element: <EditarSala /> },
+  ],
+},
           { path: '/salas/:id/eliminar', element: <EliminarSala /> },
           { path: '/perfil', element: <Perfil /> },
           { path: '/perfil/editar', element: <EditarPerfil /> },
