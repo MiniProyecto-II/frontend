@@ -4,14 +4,17 @@ import AvatarIniciales from '../components/AvatarIniciales'
 import EstadoCargando from '../components/EstadoCargando'
 import EstadoError from '../components/EstadoError'
 import Boton from '../components/Boton'
+import {ApiError} from '../services/api'
 import { useAuth } from '../hooks/useAuth'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import type { SalaEstudio } from '../services/contrato'
 import { obtenerSalaPorId } from '../services/salasService'
+import Alerta from '../components/Alerta'
 
 interface EstadoSalaNav {
   salaRecienCreada?: SalaEstudio
   esAnfitrion?: boolean
+  aviso?: string
 }
 
 function obtenerIniciales(nombres: string, apellidos: string): string {
@@ -22,8 +25,9 @@ function Sala() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { perfil } = useAuth()
+  const [noEncontrada, setNoEncontrada] = useState(false)
   const estadoNav = (useLocation().state ?? {}) as EstadoSalaNav
-
+  const [salaEliminada, setSalaEliminada] = useState<string | null>(null)
   const [sala, setSala] = useState<SalaEstudio | null>(estadoNav.salaRecienCreada ?? null)
   const [cargando, setCargando] = useState(!estadoNav.salaRecienCreada)
   const [error, setError] = useState<string | null>(null)
@@ -40,9 +44,50 @@ function Sala() {
   useTituloPagina(`${nombreSala} · Grupo de estudio`)
 
   useEffect(() => {
+  if (!sala) return
+
+  function manejarSalaEliminada(datos: {
+    roomId: string
+    roomName?: string
+  }) {
+    if (datos.roomId !== id) return
+
+    setSalaEliminada(datos.roomName || sala!.nombre)
+    setMensajesLocales([])
+    setMensajeInput('')
+  }
+
+  // Simulación frontend hasta disponer de la conexión Socket.IO.
+  function manejarEvento(evento: Event) {
+    const datos = (evento as CustomEvent<{ roomId: string; roomName?: string }>).detail
+    if (datos && typeof datos.roomId === 'string') manejarSalaEliminada(datos)
+  }
+  window.addEventListener('room-deleted', manejarEvento)
+
+  return () => {
+    window.removeEventListener('room-deleted', manejarEvento)
+  }
+}, [id, sala])
+useEffect(() => {
+  if (!salaEliminada) return
+
+  const temporizador = window.setTimeout(() => {
+    navigate('/salas', {
+      replace: true,
+      state: {
+        aviso: `El anfitrión eliminó la sala «${salaEliminada}».`,
+      },
+    })
+  }, 3000)
+
+  return () => window.clearTimeout(temporizador)
+}, [salaEliminada, navigate])
+
+  useEffect(() => {
     if (estadoNav.salaRecienCreada || !perfil || !id) return
     const controller = new AbortController()
     setCargando(true)
+    setNoEncontrada(false)
     setError(null)
 
     obtenerSalaPorId(id, perfil.uid, controller.signal)
@@ -55,9 +100,17 @@ function Sala() {
       .catch((err) => {
         if (!controller.signal.aborted) {
           setError(err instanceof Error ? err.message : 'No pudimos cargar la sala.')
+           setNoEncontrada(err instanceof ApiError && err.status === 404)
+  setError(
+    err instanceof Error
+      ? err.message
+      : 'No pudimos cargar la sala.',
+  )
           setCargando(false)
+          
         }
       })
+    
 
     return () => controller.abort()
   }, [estadoNav.salaRecienCreada, id, perfil])
@@ -83,6 +136,22 @@ function Sala() {
   }
 
   if (cargando) return <EstadoCargando />
+  if (noEncontrada) {
+  return (
+    <section className="mx-auto flex max-w-lg flex-col gap-6">
+      <h1 className="text-3xl font-bold text-texto">
+        Sala no encontrada
+      </h1>
+
+      <Alerta tipo="error">
+        Esta sala no existe o fue eliminada.
+        Comprueba el enlace con el anfitrión.
+      </Alerta>
+
+      <Boton to="/salas">Volver a Mis salas</Boton>
+    </section>
+  )
+}
 
   if (error || !sala || !perfil) {
     return <EstadoError detalle={error ?? 'No encontramos esta sala.'} onReintentar={() => navigate('/salas')} />
@@ -94,6 +163,7 @@ function Sala() {
   const totalParticipantes = 1 + otrosParticipantes.length
 
   return (
+    
     <section aria-labelledby="titulo-sala-activa" className="mx-auto flex w-full max-w-6xl flex-col gap-5">
       {/* Cabecera superior con nombre, ID copiable y estado */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-borde pb-4">
@@ -102,6 +172,15 @@ function Sala() {
             <span className="text-texto-suave"># </span>
             {sala.nombre} · Grupo de estudio
           </h1>
+          {estadoNav.aviso && (
+  <Alerta tipo="error">{estadoNav.aviso}</Alerta>
+)}
+{salaEliminada && (
+  <div role="alert" aria-atomic="true">
+    El anfitrión eliminó la sala «{salaEliminada}».
+    Volverás a Mis salas.
+  </div>
+)}
           <div className="flex flex-wrap items-center gap-3 text-xs text-texto-suave">
             <span>
               ID: <strong className="font-mono text-texto">{sala.id}</strong>
