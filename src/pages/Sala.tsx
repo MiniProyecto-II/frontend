@@ -4,6 +4,7 @@ import AvatarIniciales from '../components/AvatarIniciales'
 import EstadoCargando from '../components/EstadoCargando'
 import EstadoError from '../components/EstadoError'
 import Boton from '../components/Boton'
+import {ApiError} from '../services/api'
 import { useAuth } from '../hooks/useAuth'
 import { useTituloPagina } from '../hooks/useTituloPagina'
 import type { SalaEstudio } from '../services/contrato'
@@ -24,6 +25,7 @@ function Sala() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { perfil } = useAuth()
+  const [noEncontrada, setNoEncontrada] = useState(false)
   const estadoNav = (useLocation().state ?? {}) as EstadoSalaNav
   const [salaEliminada, setSalaEliminada] = useState<string | null>(null)
   const [sala, setSala] = useState<SalaEstudio | null>(estadoNav.salaRecienCreada ?? null)
@@ -42,7 +44,7 @@ function Sala() {
   useTituloPagina(`${nombreSala} · Grupo de estudio`)
 
   useEffect(() => {
-  if (!socket || !sala) return
+  if (!sala) return
 
   function manejarSalaEliminada(datos: {
     roomId: string
@@ -53,15 +55,19 @@ function Sala() {
     setSalaEliminada(datos.roomName || sala!.nombre)
     setMensajesLocales([])
     setMensajeInput('')
-    socket.disconnect()
   }
 
-  socket.on('room-deleted', manejarSalaEliminada)
+  // Simulación frontend hasta disponer de la conexión Socket.IO.
+  function manejarEvento(evento: Event) {
+    const datos = (evento as CustomEvent<{ roomId: string; roomName?: string }>).detail
+    if (datos && typeof datos.roomId === 'string') manejarSalaEliminada(datos)
+  }
+  window.addEventListener('room-deleted', manejarEvento)
 
   return () => {
-    socket.off('room-deleted', manejarSalaEliminada)
+    window.removeEventListener('room-deleted', manejarEvento)
   }
-}, [socket, id, sala])
+}, [id, sala])
 useEffect(() => {
   if (!salaEliminada) return
 
@@ -81,6 +87,7 @@ useEffect(() => {
     if (estadoNav.salaRecienCreada || !perfil || !id) return
     const controller = new AbortController()
     setCargando(true)
+    setNoEncontrada(false)
     setError(null)
 
     obtenerSalaPorId(id, perfil.uid, controller.signal)
@@ -93,7 +100,14 @@ useEffect(() => {
       .catch((err) => {
         if (!controller.signal.aborted) {
           setError(err instanceof Error ? err.message : 'No pudimos cargar la sala.')
+           setNoEncontrada(err instanceof ApiError && err.status === 404)
+  setError(
+    err instanceof Error
+      ? err.message
+      : 'No pudimos cargar la sala.',
+  )
           setCargando(false)
+          
         }
       })
     
@@ -122,6 +136,22 @@ useEffect(() => {
   }
 
   if (cargando) return <EstadoCargando />
+  if (noEncontrada) {
+  return (
+    <section className="mx-auto flex max-w-lg flex-col gap-6">
+      <h1 className="text-3xl font-bold text-texto">
+        Sala no encontrada
+      </h1>
+
+      <Alerta tipo="error">
+        Esta sala no existe o fue eliminada.
+        Comprueba el enlace con el anfitrión.
+      </Alerta>
+
+      <Boton to="/salas">Volver a Mis salas</Boton>
+    </section>
+  )
+}
 
   if (error || !sala || !perfil) {
     return <EstadoError detalle={error ?? 'No encontramos esta sala.'} onReintentar={() => navigate('/salas')} />
